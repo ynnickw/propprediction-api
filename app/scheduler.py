@@ -54,7 +54,10 @@ async def pipeline_job():
                 
                 edge = (model_prob - bookmaker_prob) / bookmaker_prob * 100
                 
+                # logger.info(f"Prop: {player.name} {prop.prop_type} {prop.line} | EV: {expected_value:.2f} | Model Prob: {model_prob:.2f} | Bookie Prob: {bookmaker_prob:.2f} | Edge: {edge:.2f}%")
+
                 if edge >= 8.0:
+                    logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Over | Edge: {edge:.2f}%")
                     pick = DailyPick(
                         player_name=player.name,
                         match_info=f"{match.home_team} vs {match.away_team}",

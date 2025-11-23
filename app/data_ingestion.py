@@ -48,7 +48,7 @@ async def fetch_upcoming_matches(session: AsyncSession):
                 url = f"{API_FOOTBALL_BASE}/fixtures"
                 params = {
                     "league": league_id,
-                    "season": 2023, # TODO: Dynamic season
+                    "season": 2020, # TODO: Dynamic season
                     "from": datetime.now().strftime("%Y-%m-%d"),
                     "to": (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
                 }
@@ -107,12 +107,52 @@ async def fetch_prop_lines(session: AsyncSession):
                     params = {
                         "apiKey": THE_ODDS_API_KEY,
                         "regions": "eu,uk",
-                        "markets": "player_shots,player_shots_on_goal,player_assists,player_card,player_tackles",
+                        "markets": "player_shots,player_shots_on_goal,player_assists",
                         "oddsFormat": "decimal"
                     }
                     odds_resp = await client.get(odds_url, params=params)
                     odds_data = odds_resp.json()
                     
+                    # Create/Find Match HERE
+                    event_home_team = event['home_team']
+                    event_away_team = event['away_team']
+                    event_commence_time = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
+                    
+                    stmt_match = select(Match).where(
+                        Match.home_team == event_home_team,
+                        Match.start_time >= event_commence_time - timedelta(hours=24),
+                        Match.start_time <= event_commence_time + timedelta(hours=24)
+                    )
+                    result_match = await session.execute(stmt_match)
+                    match = result_match.scalar_one_or_none()
+                    
+                    if not match:
+                        # Fallback: Try away team
+                        stmt_match = select(Match).where(
+                            Match.away_team == event['away_team'],
+                            Match.start_time >= event_commence_time - timedelta(hours=24),
+                            Match.start_time <= event_commence_time + timedelta(hours=24)
+                        )
+                        result_match = await session.execute(stmt_match)
+                        match = result_match.scalar_one_or_none()
+
+                    if not match:
+                        # Create Match from The Odds API event
+                        logger.info(f"Creating match from Odds API: {event_home_team} vs {event['away_team']}")
+                        new_match = Match(
+                            fixture_id=None, # No API Football ID
+                            league_id=LEAGUES.get(league_name, 0),
+                            home_team=event_home_team,
+                            away_team=event['away_team'],
+                            start_time=event_commence_time,
+                            status='NS'
+                        )
+                        session.add(new_match)
+                        await session.flush()
+                        match = new_match
+                    else:
+                        logger.info(f"Found existing match: {match.home_team} vs {match.away_team}")
+
                     bookmakers = odds_data.get('bookmakers', [])
                     for bookmaker in bookmakers:
                         bm_name = bookmaker['title']
@@ -148,26 +188,69 @@ async def fetch_prop_lines(session: AsyncSession):
                                     PropLine.line == line,
                                     PropLine.bookmaker == bm_name
                                 )
-                                result = await session.execute(stmt)
-                                existing_prop = result.scalar_one_or_none()
+                    if not bookmakers:
+                        logger.info(f"No bookmakers for event {event_home_team} vs {event_away_team}")
+                    else:
+                        logger.info(f"Found {len(bookmakers)} bookmakers for event {event_home_team} vs {event_away_team}")
+
+                        for bookmaker in bookmakers:
+                            bm_name = bookmaker['title']
+                            for market in bookmaker['markets']:
+                                market_key = market['key'] # e.g. player_shots
                                 
-                                if existing_prop:
-                                    if name == 'Over':
-                                        existing_prop.odds_over = price
-                                    else:
-                                        existing_prop.odds_under = price
-                                    existing_prop.timestamp = datetime.utcnow()
-                                else:
-                                    new_prop = PropLine(
-                                        player_id=player.id,
-                                        prop_type=market_key,
-                                        line=line,
-                                        bookmaker=bm_name,
-                                        odds_over=price if name == 'Over' else 0,
-                                        odds_under=price if name == 'Under' else 0,
-                                        # match_id needs linking via event_id map or fuzzy match teams
+                                for outcome in market['outcomes']:
+                                    player_name = outcome['description']
+                                    line = outcome.get('point') # The handicap/line
+                                    price = outcome['price']
+                                    name = outcome['name'] # Over or Under
+                                    
+                                    if line is None:
+                                        continue
+                                        
+                                    # Find or create player
+                                    # Note: Name matching is tricky. Ideally use fuzzy match or ID map.
+                                    # For now, exact match or create new.
+                                    stmt = select(Player).where(Player.name == player_name)
+                                    result = await session.execute(stmt)
+                                    player = result.scalar_one_or_none()
+                                    
+                                    if not player:
+                                        player = Player(name=player_name, team="Unknown", position="Unknown")
+                                        session.add(player)
+                                        await session.flush() # Get ID
+                                    
+                                    # Store Prop Line
+                                    # Check if exists to update
+                                    stmt = select(PropLine).where(
+                                        PropLine.player_id == player.id,
+                                        PropLine.prop_type == market_key,
+                                        PropLine.line == line,
+                                        PropLine.bookmaker == bm_name,
+                                        PropLine.match_id == match.id # Link to the found/created match
                                     )
-                                    session.add(new_prop)
+                                    result = await session.execute(stmt)
+                                    existing_prop = result.scalar_one_or_none()
+                                    
+                                    if existing_prop:
+                                        if name == 'Over':
+                                            existing_prop.odds_over = price
+                                        else:
+                                            existing_prop.odds_under = price
+                                        existing_prop.timestamp = datetime.utcnow()
+                                        logger.debug(f"Updated existing prop line for {player_name} ({market_key} {line}) from {bm_name}")
+                                    else:
+                                        new_prop = PropLine(
+                                            player_id=player.id,
+                                            match_id=match.id, # Link to the found/created match
+                                            prop_type=market_key,
+                                            line=line,
+                                            bookmaker=bm_name,
+                                            odds_over=price if name == 'Over' else 0,
+                                            odds_under=price if name == 'Under' else 0,
+                                            timestamp=datetime.utcnow()
+                                        )
+                                        session.add(new_prop)
+                                        logger.debug(f"Added new prop line for {player_name} ({market_key} {line}) from {bm_name}")
                     
                     await session.commit()
 
