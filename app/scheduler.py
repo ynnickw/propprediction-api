@@ -99,6 +99,14 @@ async def pipeline_job():
                 logger.warning(f"No historical stats for {player.name}, skipping prediction")
                 continue
             
+            # Filter: Must have played in at least 5 of the last 10 games
+            last_10_games = historical_stats[:10]
+            games_played = sum(1 for game in last_10_games if game.minutes_played > 0)
+            
+            if games_played < 5:
+                # logger.info(f"Skipping {player.name}: Played only {games_played}/10 recent games")
+                continue
+            
             # Prepare Team Stats
             if player.team not in team_stats_cache:
                 team_stats_cache[player.team] = await get_team_stats(session, player.team)
@@ -148,9 +156,10 @@ async def pipeline_job():
                     logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Over | Edge: {edge_over:.2f}%")
                     
                     # Store Pick (Over)
+                    # Store Pick (Over)
                     stmt_pick = select(DailyPick).where(
-                        DailyPick.player_name == player.name,
-                        DailyPick.match_info == f"{match.home_team} vs {match.away_team}",
+                        DailyPick.player_id == player.id,
+                        DailyPick.match_id == match.id,
                         DailyPick.prop_type == prop.prop_type,
                         DailyPick.line == prop.line,
                         DailyPick.recommendation == "Over"
@@ -159,8 +168,8 @@ async def pipeline_job():
                     
                     if not existing_pick:
                         pick = DailyPick(
-                            player_name=player.name,
-                            match_info=f"{match.home_team} vs {match.away_team}",
+                            player_id=player.id,
+                            match_id=match.id,
                             prop_type=prop.prop_type,
                             line=prop.line,
                             recommendation="Over",
@@ -176,12 +185,24 @@ async def pipeline_job():
             # If odds_under is 0, try to infer from odds_over
             odds_under = prop.odds_under
             if odds_under == 0 and prop.odds_over > 0:
-                # Infer Under odds (assuming 5% vig or just simple complement)
-                # Simple complement: P(Under) = 1 - P(Over)
+                # Infer Under odds with VIG/Margin adjustment
+                # Bookmakers usually have a margin (e.g., 1.07 to 1.10 sum of probs)
+                # P_Over_Implied + P_Under_Implied = 1.07 (assuming 7% vig)
+                
                 prob_over_implied = 1 / prop.odds_over
-                if prob_over_implied < 1:
-                    prob_under_implied = 1 - prob_over_implied
-                    odds_under = 1 / prob_under_implied
+                target_market_sum = 1.07 # Standard vig
+                
+                # If Over is extremely likely (e.g. 1.01 -> 0.99), P_Under would be 1.07 - 0.99 = 0.08
+                # This results in Odds ~ 12.5, which is more realistic than 100.0
+                
+                if prob_over_implied < target_market_sum:
+                    prob_under_implied = target_market_sum - prob_over_implied
+                    
+                    # Safety check: ensure probability is valid (0 < p < 1)
+                    if 0 < prob_under_implied < 1:
+                        odds_under = 1 / prob_under_implied
+                    else:
+                        odds_under = 0 # Cannot infer valid odds
             
             if odds_under > 0:
                 # Calculate True Probability of Under X
@@ -191,15 +212,16 @@ async def pipeline_job():
                 edge_under = (model_prob_under - bookmaker_prob_under) / bookmaker_prob_under * 100
                 
                 # Debug logging
-                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbUnder: {model_prob_under:.2f} | EdgeUnder: {edge_under:.2f}%")
+                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbUnder: {model_prob_under:.2f} | ImpliedOdds: {odds_under:.2f} | EdgeUnder: {edge_under:.2f}%")
                 
-                if edge_under >= 1.0:
+                # Higher threshold for Under bets (10.0%) to reduce noise
+                if edge_under >= 10.0:
                     logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Under | Edge: {edge_under:.2f}%")
                     
                     # Store Pick (Under)
                     stmt_pick = select(DailyPick).where(
-                        DailyPick.player_name == player.name,
-                        DailyPick.match_info == f"{match.home_team} vs {match.away_team}",
+                        DailyPick.player_id == player.id,
+                        DailyPick.match_id == match.id,
                         DailyPick.prop_type == prop.prop_type,
                         DailyPick.line == prop.line,
                         DailyPick.recommendation == "Under"
@@ -208,8 +230,8 @@ async def pipeline_job():
                     
                     if not existing_pick:
                         pick = DailyPick(
-                            player_name=player.name,
-                            match_info=f"{match.home_team} vs {match.away_team}",
+                            player_id=player.id,
+                            match_id=match.id,
                             prop_type=prop.prop_type,
                             line=prop.line,
                             recommendation="Under",

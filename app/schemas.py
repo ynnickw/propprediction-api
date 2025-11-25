@@ -4,6 +4,8 @@ from typing import Optional, List
 
 class PickResponse(BaseModel):
     id: int
+    player_id: int
+    match_id: int
     player_name: str
     match_info: str
     prop_type: str

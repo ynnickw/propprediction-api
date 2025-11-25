@@ -32,50 +32,73 @@ class EnsembleModel:
         """
         preds = []
         
+        # Weighted Ensemble
+        # Assign weights based on prop type and model strengths
+        
+        # Default weights (equal)
+        w_lgb = 0.5
+        w_pois = 0.5
+        
+        # Context-Aware Weights
+        if 'shots' in self.prop_type or 'tackles' in self.prop_type or 'passes' in self.prop_type:
+            # Frequent events: LightGBM is better at capturing form/variance
+            w_lgb = 0.7
+            w_pois = 0.3
+        elif 'goal' in self.prop_type or 'card' in self.prop_type or 'assist' in self.prop_type:
+            # Rare events: Poisson is theoretically superior for low counts
+            w_lgb = 0.3
+            w_pois = 0.7
+            
+        final_pred = 0.0
+        total_weight = 0.0
+        
         if self.lgb_model:
             # LightGBM prediction
             lgb_pred = self.lgb_model.predict(features)[0]
-            preds.append(max(0, lgb_pred)) # Ensure non-negative
+            lgb_pred = max(0, lgb_pred)
+            final_pred += lgb_pred * w_lgb
+            total_weight += w_lgb
             
         if self.poisson_model:
             # Poisson Regression prediction
             try:
                 pois_pred = self.poisson_model.predict(features)[0]
-                preds.append(max(0, pois_pred))
+                pois_pred = max(0, pois_pred)
+                final_pred += pois_pred * w_pois
+                total_weight += w_pois
             except Exception:
-                pass # Fail gracefully if features mismatch during dev
+                pass
         
-        if not preds:
-            # Fallback Heuristic if no models are trained
-            # Use recent form + simple adjustments
+        if total_weight > 0:
+            return final_pred / total_weight
             
-            # 1. Base Value from Recent Form
-            base_val = 0.0
-            if 'shots' in self.prop_type:
-                if 'target' in self.prop_type:
-                    base_val = features.get('shots_on_target_ema_5', features.get('shots_on_target_last_5', 0)).iloc[0]
-                else:
-                    base_val = features.get('shots_ema_5', features.get('shots_last_5', 0)).iloc[0]
-            elif 'goal' in self.prop_type:
-                base_val = features.get('goals_last_5', 0).iloc[0]
-            elif 'assist' in self.prop_type:
-                base_val = features.get('assists_last_5', 0).iloc[0]
+        # Fallback Heuristic if no models are trained
+        # Use recent form + simple adjustments
+        
+        # 1. Base Value from Recent Form
+        base_val = 0.0
+        if 'shots' in self.prop_type:
+            if 'target' in self.prop_type:
+                base_val = features.get('shots_on_target_ema_5', features.get('shots_on_target_last_5', 0)).iloc[0]
+            else:
+                base_val = features.get('shots_ema_5', features.get('shots_last_5', 0)).iloc[0]
+        elif 'goal' in self.prop_type:
+            base_val = features.get('goals_last_5', 0).iloc[0]
+        elif 'assist' in self.prop_type:
+            base_val = features.get('assists_last_5', 0).iloc[0]
+        
+        # 2. Adjustments
+        # Home Advantage (+5%)
+        if features.get('is_home', 0).iloc[0] == 1:
+            base_val *= 1.05
             
-            # 2. Adjustments
-            # Home Advantage (+5%)
-            if features.get('is_home', 0).iloc[0] == 1:
-                base_val *= 1.05
-                
-            # Opponent Strength (Conceded Shots Ratio)
-            # Compare opponent conceded vs league average (approx 12.0)
-            opp_conceded = features.get('opp_conceded_shots_avg', 12.0).iloc[0]
-            strength_ratio = opp_conceded / 12.0
-            base_val *= strength_ratio
-            
-            return float(max(0, base_val))
-            
-        # Simple average ensemble
-        return np.mean(preds)
+        # Opponent Strength (Conceded Shots Ratio)
+        # Compare opponent conceded vs league average (approx 12.0)
+        opp_conceded = features.get('opp_conceded_shots_avg', 12.0).iloc[0]
+        strength_ratio = opp_conceded / 12.0
+        base_val *= strength_ratio
+        
+        return float(max(0, base_val))
 
     def calculate_probability(self, expected_value: float, line: float, side: str) -> float:
         """

@@ -104,7 +104,6 @@ async def fetch_prop_lines(session: AsyncSession):
                     odds_url = f"{THE_ODDS_API_BASE}/{sport_key}/events/{event_id}/odds"
                     params = {
                         "apiKey": THE_ODDS_API_KEY,
-                        "apiKey": THE_ODDS_API_KEY,
                         "regions": "eu",
                         "markets": "h2h,player_shots,player_shots_on_target,player_assists,player_goal_scorer_anytime,player_to_receive_card",
                         "oddsFormat": "decimal"

@@ -70,8 +70,11 @@ class DailyPick(Base):
     __tablename__ = "daily_picks"
 
     id = Column(Integer, primary_key=True, index=True)
-    player_name = Column(String)
-    match_info = Column(String)
+    player_id = Column(Integer, ForeignKey("players.id"))
+    match_id = Column(Integer, ForeignKey("matches.id"))
+    
+    player = relationship("Player")
+    match = relationship("Match")
     prop_type = Column(String)
     line = Column(Float)
     recommendation = Column(String) # Over/Under
@@ -81,6 +84,14 @@ class DailyPick(Base):
     edge_percent = Column(Float)
     confidence = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    @property
+    def player_name(self):
+        return self.player.name if self.player else None
+
+    @property
+    def match_info(self):
+        return f"{self.match.home_team} vs {self.match.away_team}" if self.match else None
 
 class User(Base):
     __tablename__ = "users"
