@@ -186,19 +186,22 @@ async def fetch_prop_lines(session: AsyncSession):
                                     price = outcome['price']
                                     name = outcome['name']
                                     
+                                    # Normalize name
+                                    name_norm = name.lower().strip()
+                                    
                                     if market_key == 'player_shots':
-                                        logger.debug(f"Outcome: {name} | Line: {line} | Price: {price}")
+                                        logger.debug(f"Outcome: {name} (Norm: {name_norm}) | Line: {line} | Price: {price} | Desc: {player_name}")
                                     
                                     if line is None:
                                         # Handle Yes/No markets
                                         if market_key == 'player_goal_scorer_anytime':
                                             line = 0.5
-                                            if name == 'Yes': name = 'Over'
-                                            if name == 'No': name = 'Under'
+                                            if name_norm == 'yes': name_norm = 'over'
+                                            if name_norm == 'no': name_norm = 'under'
                                         elif market_key == 'player_to_receive_card':
                                             line = 0.5
-                                            if name == 'Yes': name = 'Over'
-                                            if name == 'No': name = 'Under'
+                                            if name_norm == 'yes': name_norm = 'over'
+                                            if name_norm == 'no': name_norm = 'under'
                                         else:
                                             continue
                                         
@@ -224,9 +227,9 @@ async def fetch_prop_lines(session: AsyncSession):
                                     existing_prop = result.scalar_one_or_none()
                                     
                                     if existing_prop:
-                                        if name == 'Over':
+                                        if name_norm == 'over':
                                             existing_prop.odds_over = price
-                                        else:
+                                        elif name_norm == 'under':
                                             existing_prop.odds_under = price
                                         existing_prop.timestamp = datetime.utcnow()
                                     else:
@@ -236,11 +239,12 @@ async def fetch_prop_lines(session: AsyncSession):
                                             prop_type=market_key,
                                             line=line,
                                             bookmaker=bm_name,
-                                            odds_over=price if name == 'Over' else 0,
-                                            odds_under=price if name == 'Under' else 0,
+                                            odds_over=price if name_norm == 'over' else 0,
+                                            odds_under=price if name_norm == 'under' else 0,
                                             timestamp=datetime.utcnow()
                                         )
                                         session.add(new_prop)
+                                        await session.flush()
                     
                     await session.commit()
 
@@ -352,7 +356,7 @@ async def fetch_player_stats(session: AsyncSession):
 
 async def run_ingestion():
     async with SessionLocal() as session:
-        #await fetch_upcoming_matches(session)
+        await fetch_upcoming_matches(session)
         await fetch_prop_lines(session)
         await fetch_player_stats(session)
 
