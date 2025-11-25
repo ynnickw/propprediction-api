@@ -13,6 +13,11 @@ class Match(Base):
     away_team = Column(String)
     start_time = Column(DateTime)
     status = Column(String)
+    
+    # Match Odds (1x2)
+    odds_home = Column(Float, nullable=True)
+    odds_draw = Column(Float, nullable=True)
+    odds_away = Column(Float, nullable=True)
 
     prop_lines = relationship("PropLine", back_populates="match")
 
