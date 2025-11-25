@@ -18,28 +18,19 @@ THE_ODDS_API_BASE = "https://api.the-odds-api.com/v4/sports"
 
 # League IDs mapping (API Football)
 LEAGUES = {
-    "Premier League": 39,
     "Bundesliga": 78,
-    "Champions League": 2,
-    "La Liga": 140,
-    "Serie A": 135
 }
 
 # The Odds API Sport Keys
 SPORT_KEYS = {
-    "Premier League": "soccer_epl",
-    "Bundesliga": "soccer_germany_bundesliga",
-    "Champions League": "soccer_uefa_champs_league",
-    "La Liga": "soccer_spain_la_liga",
-    "Serie A": "soccer_italy_serie_a"
+    "Bundesliga": "soccer_germany_bundesliga"
 }
 
 async def fetch_upcoming_matches(session: AsyncSession):
     """Fetch matches for the next 48 hours."""
     logger.info("Fetching upcoming matches")
     headers = {
-        "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": API_FOOTBALL_KEY
+        "x-apisports-key": API_FOOTBALL_KEY
     }
     
     async with httpx.AsyncClient() as client:

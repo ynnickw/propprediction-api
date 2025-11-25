@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
@@ -12,6 +12,9 @@ services:
       - redis
     volumes:
       - .:/app
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   db:
     image: postgres:15-alpine
