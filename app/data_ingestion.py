@@ -248,13 +248,6 @@ async def fetch_prop_lines(session: AsyncSession):
             except Exception as e:
                 logger.error(f"Failed to fetch odds for {league_name}: {e}")
 
-async def fetch_player_stats(session: AsyncSession):
-    """Fetch detailed historical player stats from API Football."""
-    # This would involve iterating over all players in DB, 
-    # calling /players/fixtures endpoint, and storing detailed stats.
-    # Due to API rate limits, this should be done carefully in batches.
-    pass
-
 async def run_ingestion():
     async with SessionLocal() as session:
         await fetch_upcoming_matches(session)
