@@ -99,12 +99,20 @@ async def pipeline_job():
                 logger.warning(f"No historical stats for {player.name}, skipping prediction")
                 continue
             
-            # Filter: Must have played in at least 5 of the last 10 games
+            # Filter 1: Must have played in at least 5 of the last 10 games
             last_10_games = historical_stats[:10]
             games_played = sum(1 for game in last_10_games if game.minutes_played > 0)
             
             if games_played < 5:
                 # logger.info(f"Skipping {player.name}: Played only {games_played}/10 recent games")
+                continue
+            
+            # Filter 2: Must have averaged > 45 minutes in games played (filters out bench players)
+            total_minutes = sum(game.minutes_played for game in last_10_games)
+            avg_minutes = total_minutes / len(last_10_games) if last_10_games else 0
+            
+            if avg_minutes <= 45:
+                logger.debug(f"Skipping {player.name}: Average minutes too low ({avg_minutes:.1f} min)")
                 continue
             
             # Prepare Team Stats
@@ -150,7 +158,7 @@ async def pipeline_job():
                 edge_over = (model_prob_over - bookmaker_prob_over) / bookmaker_prob_over * 100
                 
                 # Debug logging
-                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbOver: {model_prob_over:.2f} | EdgeOver: {edge_over:.2f}%")
+                logger.debug(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbOver: {model_prob_over:.2f} | EdgeOver: {edge_over:.2f}%")
                 
                 if edge_over >= 1.0: 
                     logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Over | Edge: {edge_over:.2f}%")
@@ -182,6 +190,12 @@ async def pipeline_job():
                         session.add(pick)
 
             # Edge Calculation (Under)
+            # Skip Under calculation if Over odds are too low (< 1.1)
+            # When odds_over < 1.1, bookmaker is extremely confident in Over (>90.9% implied probability)
+            if prop.odds_over > 0 and prop.odds_over < 1.2:
+                logger.debug(f"Skipping Under calculation for {player.name} {prop.prop_type} {prop.line}: Over odds too low ({prop.odds_over:.2f})")
+                continue
+            
             # If odds_under is 0, try to infer from odds_over
             odds_under = prop.odds_under
             if odds_under == 0 and prop.odds_over > 0:
@@ -212,7 +226,7 @@ async def pipeline_job():
                 edge_under = (model_prob_under - bookmaker_prob_under) / bookmaker_prob_under * 100
                 
                 # Debug logging
-                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbUnder: {model_prob_under:.2f} | ImpliedOdds: {odds_under:.2f} | EdgeUnder: {edge_under:.2f}%")
+                logger.debug(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbUnder: {model_prob_under:.2f} | ImpliedOdds: {odds_under:.2f} | EdgeUnder: {edge_under:.2f}%")
                 
                 # Higher threshold for Under bets (10.0%) to reduce noise
                 if edge_under >= 10.0:

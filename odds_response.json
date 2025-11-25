@@ -1,61 +1,146 @@
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host api.the-odds-api.com:443 was resolved.
-* IPv6: (none)
-* IPv4: 54.145.54.2, 34.233.176.101
-*   Trying 54.145.54.2:443...
-* Connected to api.the-odds-api.com (54.145.54.2) port 443
-* ALPN: curl offers h2,http/1.1
-* (304) (OUT), TLS handshake, Client hello (1):
-} [325 bytes data]
-*  CAfile: /etc/ssl/cert.pem
-*  CApath: none
-* (304) (IN), TLS handshake, Server hello (2):
-{ [122 bytes data]
-* (304) (IN), TLS handshake, Unknown (8):
-{ [19 bytes data]
-* (304) (IN), TLS handshake, Certificate (11):
-{ [3816 bytes data]
-* (304) (IN), TLS handshake, CERT verify (15):
-{ [264 bytes data]
-* (304) (IN), TLS handshake, Finished (20):
-{ [36 bytes data]
-* (304) (OUT), TLS handshake, Finished (20):
-} [36 bytes data]
-* SSL connection using TLSv1.3 / AEAD-AES128-GCM-SHA256 / [blank] / UNDEF
-* ALPN: server accepted h2
-* Server certificate:
-*  subject: CN=api.the-odds-api.com
-*  start date: Apr 16 00:00:00 2025 GMT
-*  expire date: May 16 23:59:59 2026 GMT
-*  subjectAltName: host "api.the-odds-api.com" matched cert's "api.the-odds-api.com"
-*  issuer: C=US; O=Amazon; CN=Amazon RSA 2048 M03
-*  SSL certificate verify ok.
-* using HTTP/2
-* [HTTP/2] [1] OPENED stream for https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/events?apiKey=a7a141a00b60b7d993934274af1d8c69
-* [HTTP/2] [1] [:method: GET]
-* [HTTP/2] [1] [:scheme: https]
-* [HTTP/2] [1] [:authority: api.the-odds-api.com]
-* [HTTP/2] [1] [:path: /v4/sports/soccer_germany_bundesliga/events?apiKey=a7a141a00b60b7d993934274af1d8c69]
-* [HTTP/2] [1] [user-agent: curl/8.7.1]
-* [HTTP/2] [1] [accept: */*]
-> GET /v4/sports/soccer_germany_bundesliga/events?apiKey=a7a141a00b60b7d993934274af1d8c69 HTTP/2
-> Host: api.the-odds-api.com
-> User-Agent: curl/8.7.1
-> Accept: */*
-> 
-* Request completely sent off
-< HTTP/2 200 
-< date: Tue, 25 Nov 2025 18:19:36 GMT
-< content-type: application/json; charset=utf-8
-< content-length: 3886
-< x-requests-used: 59
-< x-requests-remaining: 441
-< x-requests-last: 0
-< vary: Accept-Encoding
-< apigw-requestid: UnLw2iBKIAMEMug=
-< 
-{ [3886 bytes data]
-100  3886  100  3886    0     0  10576      0 --:--:-- --:--:-- --:--:-- 10588
-* Connection #0 to host api.the-odds-api.com left intact
-[{"id":"5a2fa066190fb45e3934bbe943d5f56e","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-28T19:30:00Z","home_team":"Borussia Monchengladbach","away_team":"RB Leipzig"},{"id":"7f42e93ebff5aee1ef321e55c6a69436","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-29T14:30:00Z","home_team":"Union Berlin","away_team":"1. FC Heidenheim"},{"id":"0568e880829507ff04b26083f92b27da","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-29T14:30:00Z","home_team":"Werder Bremen","away_team":"1. FC K\u00f6ln"},{"id":"070450b5d946928ce1b0b466830dcca1","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-29T14:30:00Z","home_team":"TSG Hoffenheim","away_team":"Augsburg"},{"id":"1233242a56c9de61794d7b6b384a4bf0","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-29T14:30:00Z","home_team":"Bayern Munich","away_team":"FC St. Pauli"},{"id":"dc587c30662bd2a40b3deffeb0842225","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-29T17:30:00Z","home_team":"Bayer Leverkusen","away_team":"Borussia Dortmund"},{"id":"eb44b5eb6750f8aa145ab49b9f22159e","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-30T14:30:00Z","home_team":"Hamburger SV","away_team":"VfB Stuttgart"},{"id":"5e4994e9a06e54e72fc1047aa80a5208","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-30T16:30:00Z","home_team":"Eintracht Frankfurt","away_team":"VfL Wolfsburg"},{"id":"9d261bb4385f0d0c80816f7526e02bb9","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-11-30T18:30:00Z","home_team":"SC Freiburg","away_team":"FSV Mainz 05"},{"id":"c7d96de0b9e06434fdfede8a75e723c6","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-05T19:30:00Z","home_team":"FSV Mainz 05","away_team":"Borussia Monchengladbach"},{"id":"ed1e9ffa1c651328eaa7141972daede1","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T14:30:00Z","home_team":"1. FC Heidenheim","away_team":"SC Freiburg"},{"id":"beb75d58b3d5e13861b9e6f05079b6df","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T14:30:00Z","home_team":"1. FC K\u00f6ln","away_team":"FC St. Pauli"},{"id":"32436f40d509a3f830314a275c06cc9b","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T14:30:00Z","home_team":"Augsburg","away_team":"Bayer Leverkusen"},{"id":"7bbbe43ae7df7daa171784d48547d64c","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T14:30:00Z","home_team":"VfB Stuttgart","away_team":"Bayern Munich"},{"id":"364102cb4d6768b6b88f1683ab4e2621","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T14:30:00Z","home_team":"VfL Wolfsburg","away_team":"Union Berlin"},{"id":"530219b031d0a2f95f8bd435ea6221b0","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-06T17:30:00Z","home_team":"RB Leipzig","away_team":"Eintracht Frankfurt"},{"id":"bada71fdb0ee787b69cc613aee1da7e3","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-07T14:30:00Z","home_team":"Hamburger SV","away_team":"Werder Bremen"},{"id":"bbcad65af53ca42d5dbc3b06e88847af","sport_key":"soccer_germany_bundesliga","sport_title":"Bundesliga - Germany","commence_time":"2025-12-07T16:30:00Z","home_team":"Borussia Dortmund","away_team":"TSG Hoffenheim"}]
+[
+  {
+    "id": "5a2fa066190fb45e3934bbe943d5f56e",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-28T19:30:00Z",
+    "home_team": "Borussia Monchengladbach",
+    "away_team": "RB Leipzig"
+  },
+  {
+    "id": "7f42e93ebff5aee1ef321e55c6a69436",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-29T14:30:00Z",
+    "home_team": "Union Berlin",
+    "away_team": "1. FC Heidenheim"
+  },
+  {
+    "id": "0568e880829507ff04b26083f92b27da",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-29T14:30:00Z",
+    "home_team": "Werder Bremen",
+    "away_team": "1. FC K\u00f6ln"
+  },
+  {
+    "id": "070450b5d946928ce1b0b466830dcca1",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-29T14:30:00Z",
+    "home_team": "TSG Hoffenheim",
+    "away_team": "Augsburg"
+  },
+  {
+    "id": "1233242a56c9de61794d7b6b384a4bf0",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-29T14:30:00Z",
+    "home_team": "Bayern Munich",
+    "away_team": "FC St. Pauli"
+  },
+  {
+    "id": "dc587c30662bd2a40b3deffeb0842225",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-29T17:30:00Z",
+    "home_team": "Bayer Leverkusen",
+    "away_team": "Borussia Dortmund"
+  },
+  {
+    "id": "eb44b5eb6750f8aa145ab49b9f22159e",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-30T14:30:00Z",
+    "home_team": "Hamburger SV",
+    "away_team": "VfB Stuttgart"
+  },
+  {
+    "id": "5e4994e9a06e54e72fc1047aa80a5208",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-30T16:30:00Z",
+    "home_team": "Eintracht Frankfurt",
+    "away_team": "VfL Wolfsburg"
+  },
+  {
+    "id": "9d261bb4385f0d0c80816f7526e02bb9",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-11-30T18:30:00Z",
+    "home_team": "SC Freiburg",
+    "away_team": "FSV Mainz 05"
+  },
+  {
+    "id": "c7d96de0b9e06434fdfede8a75e723c6",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-05T19:30:00Z",
+    "home_team": "FSV Mainz 05",
+    "away_team": "Borussia Monchengladbach"
+  },
+  {
+    "id": "ed1e9ffa1c651328eaa7141972daede1",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T14:30:00Z",
+    "home_team": "1. FC Heidenheim",
+    "away_team": "SC Freiburg"
+  },
+  {
+    "id": "beb75d58b3d5e13861b9e6f05079b6df",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T14:30:00Z",
+    "home_team": "1. FC K\u00f6ln",
+    "away_team": "FC St. Pauli"
+  },
+  {
+    "id": "32436f40d509a3f830314a275c06cc9b",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T14:30:00Z",
+    "home_team": "Augsburg",
+    "away_team": "Bayer Leverkusen"
+  },
+  {
+    "id": "7bbbe43ae7df7daa171784d48547d64c",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T14:30:00Z",
+    "home_team": "VfB Stuttgart",
+    "away_team": "Bayern Munich"
+  },
+  {
+    "id": "364102cb4d6768b6b88f1683ab4e2621",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T14:30:00Z",
+    "home_team": "VfL Wolfsburg",
+    "away_team": "Union Berlin"
+  },
+  {
+    "id": "530219b031d0a2f95f8bd435ea6221b0",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-06T17:30:00Z",
+    "home_team": "RB Leipzig",
+    "away_team": "Eintracht Frankfurt"
+  },
+  {
+    "id": "bada71fdb0ee787b69cc613aee1da7e3",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-07T14:30:00Z",
+    "home_team": "Hamburger SV",
+    "away_team": "Werder Bremen"
+  },
+  {
+    "id": "bbcad65af53ca42d5dbc3b06e88847af",
+    "sport_key": "soccer_germany_bundesliga",
+    "sport_title": "Bundesliga - Germany",
+    "commence_time": "2025-12-07T16:30:00Z",
+    "home_team": "Borussia Dortmund",
+    "away_team": "TSG Hoffenheim"
+  }
+]
