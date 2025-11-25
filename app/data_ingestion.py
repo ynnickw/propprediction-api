@@ -33,18 +33,25 @@ async def fetch_upcoming_matches(session: AsyncSession):
         "x-apisports-key": API_FOOTBALL_KEY
     }
     
+    # Dynamic Season Calculation
+    # If month is >= 8 (August), we are in the start of a new season (e.g. Aug 2023 -> Season 2023)
+    # If month is < 8 (e.g. Jan-July), we are in the second half of the season (e.g. May 2024 -> Season 2023)
+    current_date = datetime.now()
+    current_season = current_date.year if current_date.month >= 8 else current_date.year - 1
+
     async with httpx.AsyncClient() as client:
         for league_name, league_id in LEAGUES.items():
             try:
                 url = f"{API_FOOTBALL_BASE}/fixtures"
                 params = {
                     "league": league_id,
-                    "season": 2020, # TODO: Dynamic season
-                    "from": datetime.now().strftime("%Y-%m-%d"),
-                    "to": (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+                    "season": current_season
                 }
                 response = await client.get(url, headers=headers, params=params)
                 data = response.json()
+
+                logger.info(f"Fetched {len(data['response'])} fixtures for {league_name}")
+                logger.debug(f"Data: {data}")
                 
                 if "response" not in data:
                     logger.error(f"Error fetching fixtures for {league_name}: {data}")
@@ -97,8 +104,9 @@ async def fetch_prop_lines(session: AsyncSession):
                     odds_url = f"{THE_ODDS_API_BASE}/{sport_key}/events/{event_id}/odds"
                     params = {
                         "apiKey": THE_ODDS_API_KEY,
-                        "regions": "eu,uk",
-                        "markets": "player_shots,player_shots_on_goal,player_assists",
+                        "apiKey": THE_ODDS_API_KEY,
+                        "regions": "eu",
+                        "markets": "h2h,player_shots,player_shots_on_target,player_assists,player_goal_scorer_anytime,player_to_receive_card",
                         "oddsFormat": "decimal"
                     }
                     odds_resp = await client.get(odds_url, params=params)
@@ -145,40 +153,6 @@ async def fetch_prop_lines(session: AsyncSession):
                         logger.info(f"Found existing match: {match.home_team} vs {match.away_team}")
 
                     bookmakers = odds_data.get('bookmakers', [])
-                    for bookmaker in bookmakers:
-                        bm_name = bookmaker['title']
-                        for market in bookmaker['markets']:
-                            market_key = market['key'] # e.g. player_shots
-                            
-                            for outcome in market['outcomes']:
-                                player_name = outcome['description']
-                                line = outcome.get('point') # The handicap/line
-                                price = outcome['price']
-                                name = outcome['name'] # Over or Under
-                                
-                                if line is None:
-                                    continue
-                                    
-                                # Find or create player
-                                # Note: Name matching is tricky. Ideally use fuzzy match or ID map.
-                                # For now, exact match or create new.
-                                stmt = select(Player).where(Player.name == player_name)
-                                result = await session.execute(stmt)
-                                player = result.scalar_one_or_none()
-                                
-                                if not player:
-                                    player = Player(name=player_name, team="Unknown", position="Unknown")
-                                    session.add(player)
-                                    await session.flush() # Get ID
-                                
-                                # Store Prop Line
-                                # Check if exists to update
-                                stmt = select(PropLine).where(
-                                    PropLine.player_id == player.id,
-                                    PropLine.prop_type == market_key,
-                                    PropLine.line == line,
-                                    PropLine.bookmaker == bm_name
-                                )
                     if not bookmakers:
                         logger.info(f"No bookmakers for event {event_home_team} vs {event_away_team}")
                     else:
@@ -187,20 +161,49 @@ async def fetch_prop_lines(session: AsyncSession):
                         for bookmaker in bookmakers:
                             bm_name = bookmaker['title']
                             for market in bookmaker['markets']:
-                                market_key = market['key'] # e.g. player_shots
+                                market_key = market['key']
                                 
+                                # Handle Match Odds (H2H)
+                                if market_key == 'h2h':
+                                    for outcome in market['outcomes']:
+                                        price = outcome['price']
+                                        name = outcome['name']
+                                        
+                                        if name == event_home_team:
+                                            match.odds_home = price
+                                        elif name == event_away_team:
+                                            match.odds_away = price
+                                        elif name == 'Draw':
+                                            match.odds_draw = price
+                                    continue 
+                                
+                                # Handle Player Props
                                 for outcome in market['outcomes']:
-                                    player_name = outcome['description']
-                                    line = outcome.get('point') # The handicap/line
+                                    player_name = outcome.get('description')
+                                    if not player_name:
+                                        continue
+
+                                    line = outcome.get('point')
                                     price = outcome['price']
-                                    name = outcome['name'] # Over or Under
+                                    name = outcome['name']
+                                    
+                                    if market_key == 'player_shots':
+                                        logger.debug(f"Outcome: {name} | Line: {line} | Price: {price}")
                                     
                                     if line is None:
-                                        continue
+                                        # Handle Yes/No markets
+                                        if market_key == 'player_goal_scorer_anytime':
+                                            line = 0.5
+                                            if name == 'Yes': name = 'Over'
+                                            if name == 'No': name = 'Under'
+                                        elif market_key == 'player_to_receive_card':
+                                            line = 0.5
+                                            if name == 'Yes': name = 'Over'
+                                            if name == 'No': name = 'Under'
+                                        else:
+                                            continue
                                         
                                     # Find or create player
-                                    # Note: Name matching is tricky. Ideally use fuzzy match or ID map.
-                                    # For now, exact match or create new.
                                     stmt = select(Player).where(Player.name == player_name)
                                     result = await session.execute(stmt)
                                     player = result.scalar_one_or_none()
@@ -208,16 +211,15 @@ async def fetch_prop_lines(session: AsyncSession):
                                     if not player:
                                         player = Player(name=player_name, team="Unknown", position="Unknown")
                                         session.add(player)
-                                        await session.flush() # Get ID
+                                        await session.flush()
                                     
                                     # Store Prop Line
-                                    # Check if exists to update
                                     stmt = select(PropLine).where(
                                         PropLine.player_id == player.id,
                                         PropLine.prop_type == market_key,
                                         PropLine.line == line,
                                         PropLine.bookmaker == bm_name,
-                                        PropLine.match_id == match.id # Link to the found/created match
+                                        PropLine.match_id == match.id
                                     )
                                     result = await session.execute(stmt)
                                     existing_prop = result.scalar_one_or_none()
@@ -228,11 +230,10 @@ async def fetch_prop_lines(session: AsyncSession):
                                         else:
                                             existing_prop.odds_under = price
                                         existing_prop.timestamp = datetime.utcnow()
-                                        logger.debug(f"Updated existing prop line for {player_name} ({market_key} {line}) from {bm_name}")
                                     else:
                                         new_prop = PropLine(
                                             player_id=player.id,
-                                            match_id=match.id, # Link to the found/created match
+                                            match_id=match.id,
                                             prop_type=market_key,
                                             line=line,
                                             bookmaker=bm_name,
@@ -241,18 +242,120 @@ async def fetch_prop_lines(session: AsyncSession):
                                             timestamp=datetime.utcnow()
                                         )
                                         session.add(new_prop)
-                                        logger.debug(f"Added new prop line for {player_name} ({market_key} {line}) from {bm_name}")
                     
                     await session.commit()
 
             except Exception as e:
                 logger.error(f"Failed to fetch odds for {league_name}: {e}")
 
+async def fetch_player_stats(session: AsyncSession):
+    """Fetch player stats for recently finished matches."""
+    logger.info("Fetching player stats for finished matches")
+    
+    # Find matches finished in the last 7 days that might need stats
+    # Ideally we'd check if we already have stats for them, but for now just look back a bit
+    # A better check: Match.status == 'FT' AND NOT EXISTS(HistoricalStat where match_date = match.start_time)
+    # But date matching is fuzzy. Let's just grab recent FT matches.
+    
+    stmt = select(Match).where(
+        Match.status == 'FT',
+        Match.start_time >= datetime.now() - timedelta(days=3)
+    )
+    result = await session.execute(stmt)
+    matches = result.scalars().all()
+    
+    if not matches:
+        logger.info("No recent finished matches found to fetch stats for.")
+        return
+
+    headers = {
+        "x-apisports-key": API_FOOTBALL_KEY
+    }
+    
+    async with httpx.AsyncClient() as client:
+        for match in matches:
+            if not match.fixture_id:
+                continue
+                
+            # Check if we already have stats for this match
+            # We check if any HistoricalStat exists for this date and these teams
+            stmt_check = select(HistoricalStat).where(
+                HistoricalStat.match_date == match.start_time.date(),
+                HistoricalStat.opponent.in_([match.home_team, match.away_team])
+            ).limit(1)
+            result_check = await session.execute(stmt_check)
+            if result_check.scalar_one_or_none():
+                logger.info(f"Stats already exist for {match.home_team} vs {match.away_team}, skipping.")
+                continue
+            
+            try:
+                logger.info(f"Fetching stats for match {match.home_team} vs {match.away_team} (ID: {match.fixture_id})")
+                url = f"{API_FOOTBALL_BASE}/fixtures/players"
+                params = {"fixture": match.fixture_id}
+                
+                response = await client.get(url, headers=headers, params=params)
+                data = response.json()
+                
+                if "response" not in data:
+                    logger.error(f"Error fetching stats for match {match.fixture_id}: {data}")
+                    continue
+                    
+                for team_data in data["response"]:
+                    team_name = team_data["team"]["name"]
+                    
+                    for player_data in team_data["players"]:
+                        p_info = player_data["player"]
+                        stats = player_data["statistics"][0] # Usually only 1 item for the match
+                        
+                        # Find or Create Player
+                        stmt_p = select(Player).where(Player.player_id == p_info["id"])
+                        result_p = await session.execute(stmt_p)
+                        player = result_p.scalar_one_or_none()
+                        
+                        if not player:
+                            player = Player(
+                                player_id=p_info["id"],
+                                name=p_info["name"],
+                                team=team_name,
+                                position=stats["games"]["position"] or "Unknown"
+                            )
+                            session.add(player)
+                            await session.flush()
+                        
+                        # Create HistoricalStat
+                        # Check for duplicate (same player, same date)
+                        stmt_hs = select(HistoricalStat).where(
+                            HistoricalStat.player_id == player.id,
+                            HistoricalStat.match_date == match.start_time.date()
+                        )
+                        result_hs = await session.execute(stmt_hs)
+                        existing_stat = result_hs.scalar_one_or_none()
+                        
+                        if not existing_stat:
+                            new_stat = HistoricalStat(
+                                player_id=player.id,
+                                match_date=match.start_time.date(),
+                                opponent=match.away_team if team_name == match.home_team else match.home_team,
+                                minutes_played=stats["games"]["minutes"] or 0,
+                                shots=stats["shots"]["total"] or 0,
+                                shots_on_target=stats["shots"]["on"] or 0,
+                                assists=stats["goals"]["assists"] or 0,
+                                passes=stats["passes"]["total"] or 0,
+                                tackles=stats["tackles"]["total"] or 0,
+                                cards=(stats["cards"]["yellow"] or 0) + (stats["cards"]["red"] or 0)
+                            )
+                            session.add(new_stat)
+                
+                await session.commit()
+                
+            except Exception as e:
+                logger.error(f"Failed to fetch stats for match {match.fixture_id}: {e}")
+
 async def run_ingestion():
     async with SessionLocal() as session:
-        await fetch_upcoming_matches(session)
+        #await fetch_upcoming_matches(session)
         await fetch_prop_lines(session)
-        # await fetch_player_stats(session)
+        await fetch_player_stats(session)
 
 if __name__ == "__main__":
     asyncio.run(run_ingestion())

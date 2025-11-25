@@ -2,16 +2,64 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from .data_ingestion import run_ingestion
 from .database import SessionLocal
-from .models import Match, Player, PropLine, DailyPick
+from .models import Match, Player, PropLine, DailyPick, HistoricalStat
 from .features import prepare_features
 from .model import predict_props
-from sqlalchemy import select
+from sqlalchemy import select, func, desc
 import structlog
 import asyncio
 
 logger = structlog.get_logger()
 
 scheduler = AsyncIOScheduler()
+
+async def get_team_stats(session, team_name):
+    """
+    Fetch recent team stats (shots, conceded) from historical data.
+    For now, returning defaults to keep it fast, but this is where 
+    you'd aggregate HistoricalStat data.
+    """
+    # 1. Team Shots (Last 5 matches)
+    # Subquery to get total shots per match for this team
+    stmt_shots = (
+        select(
+            HistoricalStat.match_date,
+            func.sum(HistoricalStat.shots).label("total_shots")
+        )
+        .join(Player)
+        .where(Player.team == team_name)
+        .group_by(HistoricalStat.match_date)
+        .order_by(desc(HistoricalStat.match_date))
+        .limit(5)
+    )
+    
+    result_shots = await session.execute(stmt_shots)
+    shots_per_match = [row.total_shots for row in result_shots]
+    
+    avg_shots = sum(shots_per_match) / len(shots_per_match) if shots_per_match else 12.0
+
+    # 2. Conceded Shots (Last 5 matches)
+    # Sum of shots by opponents against this team
+    stmt_conceded = (
+        select(
+            HistoricalStat.match_date,
+            func.sum(HistoricalStat.shots).label("total_conceded")
+        )
+        .where(HistoricalStat.opponent == team_name)
+        .group_by(HistoricalStat.match_date)
+        .order_by(desc(HistoricalStat.match_date))
+        .limit(5)
+    )
+    
+    result_conceded = await session.execute(stmt_conceded)
+    conceded_per_match = [row.total_conceded for row in result_conceded]
+    
+    avg_conceded = sum(conceded_per_match) / len(conceded_per_match) if conceded_per_match else 12.0
+    
+    return {
+        'team_shots_avg': float(avg_shots),
+        'opp_conceded_shots_avg': float(avg_conceded)
+    }
 
 async def pipeline_job():
     logger.info("Starting pipeline job")
@@ -29,6 +77,9 @@ async def pipeline_job():
         rows = result.all()
         
         logger.info(f"Found {len(rows)} prop lines to process")
+        
+        # Cache team stats to avoid re-fetching
+        team_stats_cache = {}
         
         for row in rows:
             prop = row[0]
@@ -48,11 +99,27 @@ async def pipeline_job():
                 logger.warning(f"No historical stats for {player.name}, skipping prediction")
                 continue
             
+            # Prepare Team Stats
+            if player.team not in team_stats_cache:
+                team_stats_cache[player.team] = await get_team_stats(session, player.team)
+            
+            # Prepare Odds
+            # Use odds from Match table, default to 2.5 if missing
+            match_odds = {
+                'B365H': match.odds_home if match.odds_home else 2.5,
+                'B365D': match.odds_draw if match.odds_draw else 3.2,
+                'B365A': match.odds_away if match.odds_away else 2.5
+            }
+            
             # Feature Engineering
-            # We pass None for team_stats and odds for now (will use defaults in features.py)
-            # In a future update, we should fetch these from DB or API
             try:
-                features = prepare_features(player, match, historical_stats)
+                features = prepare_features(
+                    player, 
+                    match, 
+                    historical_stats, 
+                    team_stats=team_stats_cache[player.team], 
+                    odds=match_odds
+                )
             except Exception as e:
                 logger.error(f"Feature engineering failed for {player.name}: {e}")
                 continue
@@ -66,18 +133,21 @@ async def pipeline_job():
                 logger.error(f"Prediction failed for {player.name} {prop.prop_type}: {e}")
                 continue
             
-            # Edge Calculation
+            # Edge Calculation (Over)
             if prop.odds_over > 0:
                 # Calculate True Probability of Over X
-                model_prob = model_obj.calculate_probability(expected_value, prop.line, 'Over')
-                bookmaker_prob = 1 / prop.odds_over
+                model_prob_over = model_obj.calculate_probability(expected_value, prop.line, 'Over')
+                bookmaker_prob_over = 1 / prop.odds_over
                 
-                edge = (model_prob - bookmaker_prob) / bookmaker_prob * 100
+                edge_over = (model_prob_over - bookmaker_prob_over) / bookmaker_prob_over * 100
                 
-                if edge >= 5.0: # Lower threshold for testing
-                    logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Over | Edge: {edge:.2f}%")
+                # Debug logging
+                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbOver: {model_prob_over:.2f} | EdgeOver: {edge_over:.2f}%")
+                
+                if edge_over >= 1.0: 
+                    logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Over | Edge: {edge_over:.2f}%")
                     
-                    # Check if pick already exists to avoid duplicates
+                    # Store Pick (Over)
                     stmt_pick = select(DailyPick).where(
                         DailyPick.player_name == player.name,
                         DailyPick.match_info == f"{match.home_team} vs {match.away_team}",
@@ -95,15 +165,61 @@ async def pipeline_job():
                             line=prop.line,
                             recommendation="Over",
                             model_expected=expected_value,
-                            bookmaker_prob=bookmaker_prob,
-                            model_prob=model_prob,
-                            edge_percent=edge,
-                            confidence="High" if edge > 15 else "Medium"
+                            bookmaker_prob=bookmaker_prob_over,
+                            model_prob=model_prob_over,
+                            edge_percent=edge_over,
+                            confidence="High" if edge_over > 15 else "Medium"
                         )
                         session.add(pick)
+
+            # Edge Calculation (Under)
+            # If odds_under is 0, try to infer from odds_over
+            odds_under = prop.odds_under
+            if odds_under == 0 and prop.odds_over > 0:
+                # Infer Under odds (assuming 5% vig or just simple complement)
+                # Simple complement: P(Under) = 1 - P(Over)
+                prob_over_implied = 1 / prop.odds_over
+                if prob_over_implied < 1:
+                    prob_under_implied = 1 - prob_over_implied
+                    odds_under = 1 / prob_under_implied
             
-            #TODO: Logic for Under (if needed, usually we focus on Over for props)
-            # ...
+            if odds_under > 0:
+                # Calculate True Probability of Under X
+                model_prob_under = model_obj.calculate_probability(expected_value, prop.line, 'Under')
+                bookmaker_prob_under = 1 / odds_under
+                
+                edge_under = (model_prob_under - bookmaker_prob_under) / bookmaker_prob_under * 100
+                
+                # Debug logging
+                logger.info(f"DEBUG: {player.name} {prop.prop_type} {prop.line} | Exp: {expected_value:.2f} | ModelProbUnder: {model_prob_under:.2f} | EdgeUnder: {edge_under:.2f}%")
+                
+                if edge_under >= 1.0:
+                    logger.info(f"*** FOUND PICK *** {player.name} {prop.prop_type} {prop.line} Under | Edge: {edge_under:.2f}%")
+                    
+                    # Store Pick (Under)
+                    stmt_pick = select(DailyPick).where(
+                        DailyPick.player_name == player.name,
+                        DailyPick.match_info == f"{match.home_team} vs {match.away_team}",
+                        DailyPick.prop_type == prop.prop_type,
+                        DailyPick.line == prop.line,
+                        DailyPick.recommendation == "Under"
+                    )
+                    existing_pick = (await session.execute(stmt_pick)).scalar_one_or_none()
+                    
+                    if not existing_pick:
+                        pick = DailyPick(
+                            player_name=player.name,
+                            match_info=f"{match.home_team} vs {match.away_team}",
+                            prop_type=prop.prop_type,
+                            line=prop.line,
+                            recommendation="Under",
+                            model_expected=expected_value,
+                            bookmaker_prob=bookmaker_prob_under,
+                            model_prob=model_prob_under,
+                            edge_percent=edge_under,
+                            confidence="High" if edge_under > 15 else "Medium"
+                        )
+                        session.add(pick)
         
         await session.commit()
     
@@ -117,3 +233,7 @@ def start_scheduler():
         replace_existing=True
     )
     scheduler.start()
+
+if __name__ == "__main__":
+    # Allow running the pipeline manually for testing
+    asyncio.run(pipeline_job())

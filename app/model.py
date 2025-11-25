@@ -39,7 +39,6 @@ class EnsembleModel:
             
         if self.poisson_model:
             # Poisson Regression prediction
-            # Note: The pipeline expects the same feature columns as training
             try:
                 pois_pred = self.poisson_model.predict(features)[0]
                 preds.append(max(0, pois_pred))
@@ -47,10 +46,35 @@ class EnsembleModel:
                 pass # Fail gracefully if features mismatch during dev
         
         if not preds:
-            return 0.0
+            # Fallback Heuristic if no models are trained
+            # Use recent form + simple adjustments
+            
+            # 1. Base Value from Recent Form
+            base_val = 0.0
+            if 'shots' in self.prop_type:
+                if 'target' in self.prop_type:
+                    base_val = features.get('shots_on_target_ema_5', features.get('shots_on_target_last_5', 0)).iloc[0]
+                else:
+                    base_val = features.get('shots_ema_5', features.get('shots_last_5', 0)).iloc[0]
+            elif 'goal' in self.prop_type:
+                base_val = features.get('goals_last_5', 0).iloc[0]
+            elif 'assist' in self.prop_type:
+                base_val = features.get('assists_last_5', 0).iloc[0]
+            
+            # 2. Adjustments
+            # Home Advantage (+5%)
+            if features.get('is_home', 0).iloc[0] == 1:
+                base_val *= 1.05
+                
+            # Opponent Strength (Conceded Shots Ratio)
+            # Compare opponent conceded vs league average (approx 12.0)
+            opp_conceded = features.get('opp_conceded_shots_avg', 12.0).iloc[0]
+            strength_ratio = opp_conceded / 12.0
+            base_val *= strength_ratio
+            
+            return float(max(0, base_val))
             
         # Simple average ensemble
-        # In a higher-end version, use weighted average based on CV performance
         return np.mean(preds)
 
     def calculate_probability(self, expected_value: float, line: float, side: str) -> float:
