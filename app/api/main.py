@@ -1,17 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from typing import List, Optional
 from datetime import datetime, date
 from contextlib import asynccontextmanager
 
-from .database import get_db, engine, Base
-from .models import DailyPick, Match
-from .schemas import PickResponse, LeagueResponse, HealthResponse
+from ..core.database import get_db, engine, Base
+from ..core.models import DailyPick, Match
+from ..core.schemas import PickResponse, LeagueResponse, HealthResponse
 from .auth import get_api_key
-from .scheduler import start_scheduler
-from .utils import configure_logging, get_logger
-from .data_ingestion import LEAGUES
+from ..services.scheduler import start_scheduler
+from ..core.utils import configure_logging, get_logger
+from ..data.data_ingestion import LEAGUES
 
 configure_logging()
 logger = get_logger(__name__)
@@ -42,13 +42,20 @@ async def health_check():
 @app.get("/picks", response_model=List[PickResponse])
 async def get_todays_picks(
     session: AsyncSession = Depends(get_db),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(get_api_key),
+    prediction_type: Optional[str] = None
 ):
-    """Get top value picks for today."""
+    """Get top value picks for today. Optionally filter by prediction_type ('player_prop', 'over_under_2.5', 'btts')."""
     today = date.today()
     stmt = select(DailyPick).where(
         DailyPick.created_at >= datetime.combine(today, datetime.min.time())
-    ).order_by(DailyPick.edge_percent.desc()).limit(15)
+    )
+    
+    # Filter by prediction_type if provided
+    if prediction_type:
+        stmt = stmt.where(DailyPick.prediction_type == prediction_type)
+    
+    stmt = stmt.order_by(DailyPick.edge_percent.desc()).limit(15)
     
     result = await session.execute(stmt)
     picks = result.scalars().all()
@@ -74,6 +81,30 @@ async def get_historical_picks(
     result = await session.execute(stmt)
     picks = result.scalars().all()
     return picks
+
+@app.get("/picks/match", response_model=List[PickResponse])
+async def get_match_picks(
+    session: AsyncSession = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+    prediction_type: Optional[str] = None
+):
+    """Get match-level picks (Over/Under 2.5 or BTTS). Optionally filter by prediction_type."""
+    today = date.today()
+    stmt = select(DailyPick).where(
+        DailyPick.created_at >= datetime.combine(today, datetime.min.time()),
+        DailyPick.prediction_type.in_(['over_under_2.5', 'btts'])
+    )
+    
+    # Filter by prediction_type if provided
+    if prediction_type:
+        stmt = stmt.where(DailyPick.prediction_type == prediction_type)
+    
+    stmt = stmt.order_by(DailyPick.edge_percent.desc()).limit(20)
+    
+    result = await session.execute(stmt)
+    picks = result.scalars().all()
+    return picks
+
 
 @app.get("/leagues", response_model=List[LeagueResponse])
 async def get_leagues():

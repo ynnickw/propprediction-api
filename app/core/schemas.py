@@ -4,12 +4,13 @@ from typing import Optional, List
 
 class PickResponse(BaseModel):
     id: int
-    player_id: int
+    player_id: Optional[int] = None
     match_id: int
-    player_name: str
+    player_name: Optional[str] = None
     match_info: str
+    prediction_type: str = 'player_prop'
     prop_type: str
-    line: float
+    line: Optional[float] = None
     recommendation: str
     model_expected: float
     bookmaker_prob: float

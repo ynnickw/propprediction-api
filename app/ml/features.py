@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Optional
-from .models import HistoricalStat, Match, Player
+from ..core.models import HistoricalStat, Match, Player
 
 def calculate_rolling_stats(stats: List[HistoricalStat]) -> Dict[str, float]:
     """

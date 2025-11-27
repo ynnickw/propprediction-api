@@ -18,6 +18,12 @@ class Match(Base):
     odds_home = Column(Float, nullable=True)
     odds_draw = Column(Float, nullable=True)
     odds_away = Column(Float, nullable=True)
+    
+    # Match Prediction Odds
+    odds_over_2_5 = Column(Float, nullable=True)
+    odds_under_2_5 = Column(Float, nullable=True)
+    odds_btts_yes = Column(Float, nullable=True)
+    odds_btts_no = Column(Float, nullable=True)
 
     prop_lines = relationship("PropLine", back_populates="match")
 
@@ -70,14 +76,15 @@ class DailyPick(Base):
     __tablename__ = "daily_picks"
 
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=True)  # Nullable for match-level picks
     match_id = Column(Integer, ForeignKey("matches.id"))
     
     player = relationship("Player")
     match = relationship("Match")
+    prediction_type = Column(String, default='player_prop')  # 'player_prop', 'over_under_2.5', 'btts'
     prop_type = Column(String)
     line = Column(Float)
-    recommendation = Column(String) # Over/Under
+    recommendation = Column(String) # Over/Under/Yes/No
     model_expected = Column(Float)
     bookmaker_prob = Column(Float)
     model_prob = Column(Float)

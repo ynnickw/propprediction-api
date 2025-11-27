@@ -1,13 +1,17 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from .data_ingestion import run_ingestion
-from .database import SessionLocal
-from .models import Match, Player, PropLine, DailyPick, HistoricalStat
-from .features import prepare_features
-from .model import predict_props
+from ..data.data_ingestion import run_ingestion
+from ..core.database import SessionLocal
+from ..core.models import Match, Player, PropLine, DailyPick, HistoricalStat
+from ..ml.features import prepare_features
+from ..ml.model import predict_props, predict_match_outcome
+from ..ml.match_predictions import prepare_match_features_for_prediction, calculate_edge, filter_picks_by_edge
+from ..ml.match_features import load_match_level_data, engineer_over_under_2_5_features, engineer_btts_features
 from sqlalchemy import select, func, desc
 import structlog
 import asyncio
+import pandas as pd
+import time
 
 logger = structlog.get_logger()
 
@@ -259,7 +263,174 @@ async def pipeline_job():
         
         await session.commit()
     
+    # 3. Run Match-Level Predictions (Over/Under 2.5 and BTTS)
+    await generate_match_predictions(session)
+    
     logger.info("Pipeline job completed")
+
+
+async def generate_match_predictions(session):
+    """
+    Generate match-level predictions (Over/Under 2.5 and BTTS) for upcoming matches.
+    """
+    start_time = time.time()
+    logger.info("Generating match-level predictions")
+    
+    # Fetch upcoming matches with odds
+    stmt = select(Match).where(
+        Match.status == 'NS'  # Not started
+    )
+    result = await session.execute(stmt)
+    matches = result.scalars().all()
+    
+    if not matches:
+        logger.info("No upcoming matches found for prediction")
+        return
+    
+    logger.info(f"Found {len(matches)} upcoming matches")
+    
+    # Load historical match data for feature engineering
+    try:
+        historical_df = load_match_level_data()
+        historical_df = engineer_over_under_2_5_features(historical_df)
+        historical_df_btts = engineer_btts_features(historical_df)
+    except Exception as e:
+        logger.warning(f"Could not load historical match data: {e}")
+        historical_df = None
+        historical_df_btts = None
+    
+    predictions = []
+    
+    for match in matches:
+        # Skip if no odds available
+        if not match.odds_over_2_5 and not match.odds_btts_yes:
+            logger.debug(f"Skipping match {match.home_team} vs {match.away_team}: No odds available")
+            continue
+        
+        try:
+            # Prepare features
+            features_over_under, features_btts = prepare_match_features_for_prediction(
+                match, historical_df if historical_df is not None else None
+            )
+            
+            # Over/Under 2.5 prediction
+            if match.odds_over_2_5:
+                try:
+                    # Get feature columns (exclude metadata)
+                    exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
+                                    'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
+                                    'total_goals', 'over_2_5', 'btts', 'year']
+                    feature_cols = [col for col in features_over_under.columns 
+                                   if col not in exclude_cols and pd.api.types.is_numeric_dtype(features_over_under[col])]
+                    
+                    if len(feature_cols) > 0:
+                        pred_result = predict_match_outcome(features_over_under[feature_cols], 'over_under_2.5')
+                        model_prob = pred_result['model_prob']
+                        recommendation = pred_result['recommendation']
+                        
+                        # Calculate edge
+                        if recommendation == 'Over' and match.odds_over_2_5:
+                            bookmaker_prob, edge = calculate_edge(model_prob, match.odds_over_2_5)
+                        elif recommendation == 'Under' and match.odds_under_2_5:
+                            bookmaker_prob, edge = calculate_edge(1 - model_prob, match.odds_under_2_5)
+                        else:
+                            edge = 0.0
+                            bookmaker_prob = 0.0
+                        
+                        if edge >= 8.0:  # Minimum edge threshold
+                            predictions.append({
+                                'match': match,
+                                'prediction_type': 'over_under_2.5',
+                                'recommendation': recommendation,
+                                'model_prob': model_prob,
+                                'bookmaker_prob': bookmaker_prob,
+                                'edge_percent': edge,
+                                'odds': match.odds_over_2_5 if recommendation == 'Over' else match.odds_under_2_5
+                            })
+                except Exception as e:
+                    logger.error(f"Error predicting Over/Under 2.5 for {match.home_team} vs {match.away_team}: {e}")
+            
+            # BTTS prediction
+            if match.odds_btts_yes:
+                try:
+                    exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
+                                    'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
+                                    'total_goals', 'over_2_5', 'btts', 'year']
+                    feature_cols = [col for col in features_btts.columns 
+                                   if col not in exclude_cols and pd.api.types.is_numeric_dtype(features_btts[col])]
+                    
+                    if len(feature_cols) > 0:
+                        pred_result = predict_match_outcome(features_btts[feature_cols], 'btts')
+                        model_prob = pred_result['model_prob']
+                        recommendation = pred_result['recommendation']
+                        
+                        # Calculate edge
+                        if recommendation == 'Yes' and match.odds_btts_yes:
+                            bookmaker_prob, edge = calculate_edge(model_prob, match.odds_btts_yes)
+                            odds = match.odds_btts_yes
+                        elif recommendation == 'No' and match.odds_btts_no:
+                            bookmaker_prob, edge = calculate_edge(1 - model_prob, match.odds_btts_no)
+                            odds = match.odds_btts_no
+                        else:
+                            edge = 0.0
+                            bookmaker_prob = 0.0
+                            odds = None
+                        
+                        if edge >= 8.0 and odds:
+                            predictions.append({
+                                'match': match,
+                                'prediction_type': 'btts',
+                                'recommendation': recommendation,
+                                'model_prob': model_prob,
+                                'bookmaker_prob': bookmaker_prob,
+                                'edge_percent': edge,
+                                'odds': odds
+                            })
+                except Exception as e:
+                    logger.error(f"Error predicting BTTS for {match.home_team} vs {match.away_team}: {e}")
+        
+        except Exception as e:
+            logger.error(f"Error processing match {match.home_team} vs {match.away_team}: {e}")
+            continue
+    
+    # Store picks in database
+    for pred in predictions:
+        try:
+            # Check if pick already exists
+            stmt = select(DailyPick).where(
+                DailyPick.match_id == pred['match'].id,
+                DailyPick.prediction_type == pred['prediction_type'],
+                DailyPick.recommendation == pred['recommendation']
+            )
+            existing = (await session.execute(stmt)).scalar_one_or_none()
+            
+            if not existing:
+                pick = DailyPick(
+                    match_id=pred['match'].id,
+                    player_id=None,  # Match-level picks don't have player_id
+                    prediction_type=pred['prediction_type'],
+                    prop_type=pred['prediction_type'],
+                    line=2.5 if pred['prediction_type'] == 'over_under_2.5' else None,
+                    recommendation=pred['recommendation'],
+                    model_expected=pred['model_prob'],
+                    bookmaker_prob=pred['bookmaker_prob'],
+                    model_prob=pred['model_prob'],
+                    edge_percent=pred['edge_percent'],
+                    confidence="High" if pred['edge_percent'] > 15 else "Medium"
+                )
+                session.add(pick)
+                logger.info(f"Created match pick: {pred['match'].home_team} vs {pred['match'].away_team} - {pred['prediction_type']} {pred['recommendation']} (Edge: {pred['edge_percent']:.2f}%)")
+        except Exception as e:
+            logger.error(f"Error storing pick: {e}")
+    
+    await session.commit()
+    
+    elapsed_time = time.time() - start_time
+    logger.info(f"Generated {len(predictions)} match-level picks in {elapsed_time:.2f} seconds")
+    
+    # Log performance metrics
+    if matches:
+        logger.info(f"Processed {len(matches)} matches, {len(predictions)} picks generated ({len(predictions)/len(matches)*100:.1f}% pick rate)")
 
 def start_scheduler():
     scheduler.add_job(

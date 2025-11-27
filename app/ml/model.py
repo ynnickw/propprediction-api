@@ -5,6 +5,9 @@ import os
 import joblib
 from typing import Dict, Any, Tuple
 from scipy.stats import poisson
+import structlog
+
+logger = structlog.get_logger()
 
 MODEL_DIR = "models"
 
@@ -23,7 +26,11 @@ class EnsembleModel:
     def _load_poisson(self):
         model_path = os.path.join(MODEL_DIR, f"poisson_{self.prop_type}.joblib")
         if os.path.exists(model_path):
-            return joblib.load(model_path)
+            loaded = joblib.load(model_path)
+            # Handle both dict format (with scaler) and direct model
+            if isinstance(loaded, dict):
+                return loaded
+            return loaded
         return None
 
     def predict_expected_value(self, features: pd.DataFrame) -> float:
@@ -62,11 +69,23 @@ class EnsembleModel:
         if self.poisson_model:
             # Poisson Regression prediction
             try:
-                pois_pred = self.poisson_model.predict(features)[0]
+                if isinstance(self.poisson_model, dict):
+                    # Model with scaler
+                    poisson_m = self.poisson_model.get('model')
+                    scaler = self.poisson_model.get('scaler')
+                    if poisson_m and scaler:
+                        from sklearn.preprocessing import StandardScaler
+                        features_scaled = scaler.transform(features)
+                        pois_pred = poisson_m.predict(features_scaled)[0]
+                    else:
+                        pois_pred = poisson_m.predict(features)[0]
+                else:
+                    pois_pred = self.poisson_model.predict(features)[0]
                 pois_pred = max(0, pois_pred)
                 final_pred += pois_pred * w_pois
                 total_weight += w_pois
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Poisson prediction failed: {e}")
                 pass
         
         if total_weight > 0:
@@ -143,4 +162,81 @@ def predict_props(features: pd.DataFrame, prop_type: str) -> Dict[str, Any]:
     return {
         "expected_value": expected_value,
         "model_obj": model # Return model object to calculate probabilities later with specific lines
+    }
+
+
+def predict_match_outcome(features: pd.DataFrame, prediction_type: str) -> Dict[str, Any]:
+    """
+    Predict match outcome (Over/Under 2.5 or BTTS) using ensemble models.
+    
+    Args:
+        features: DataFrame with match features (single row)
+        prediction_type: 'over_under_2.5' or 'btts'
+    
+    Returns:
+        Dictionary with prediction results including model probability
+    """
+    model = EnsembleModel(prediction_type)
+    
+    # For match predictions, we need probability directly (not expected value)
+    # Load models and get probability predictions
+    lgb_model = model.lgb_model
+    poisson_model = model.poisson_model
+    
+    predictions = {}
+    weights = {}
+    
+    # LightGBM prediction (binary classification probability)
+    if lgb_model:
+        try:
+            lgb_prob = lgb_model.predict(features)[0]
+            predictions['lightgbm'] = float(lgb_prob)
+            weights['lightgbm'] = 0.6  # Higher weight for binary classification
+        except Exception as e:
+            logger.warning(f"LightGBM prediction failed: {e}")
+    
+    # Poisson prediction (convert expected goals to Over/Under probability)
+    if poisson_model:
+        try:
+            if isinstance(poisson_model, dict):
+                poisson_m = poisson_model.get('model')
+                scaler = poisson_model.get('scaler')
+                if poisson_m and scaler:
+                    from sklearn.preprocessing import StandardScaler
+                    features_scaled = scaler.transform(features)
+                    expected_goals = poisson_m.predict(features_scaled)[0]
+                else:
+                    expected_goals = poisson_m.predict(features)[0]
+            else:
+                expected_goals = poisson_model.predict(features)[0]
+            
+            # Convert to Over/Under probability
+            if prediction_type == 'over_under_2.5':
+                from scipy.stats import poisson as poisson_dist
+                pois_prob = 1 - poisson_dist.cdf(2, max(0, expected_goals))
+            else:
+                pois_prob = 0.5  # Placeholder for BTTS
+            predictions['poisson'] = float(pois_prob)
+            weights['poisson'] = 0.4
+        except Exception as e:
+            logger.warning(f"Poisson prediction failed: {e}")
+    
+    # Ensemble (weighted average)
+    total_weight = sum(weights.values())
+    if total_weight > 0:
+        model_prob = sum(predictions[k] * weights[k] for k in predictions) / total_weight
+    else:
+        model_prob = 0.5
+    
+    # Determine recommendation
+    if prediction_type == 'over_under_2.5':
+        recommendation = 'Over' if model_prob > 0.5 else 'Under'
+    else:  # btts
+        recommendation = 'Yes' if model_prob > 0.5 else 'No'
+    
+    return {
+        'model_prob': float(model_prob),
+        'recommendation': recommendation,
+        'predictions': predictions,
+        'model_obj': model
     }

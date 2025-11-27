@@ -1,0 +1,278 @@
+openapi: 3.0.3
+info:
+  title: Match-Level Picks API
+  description: API endpoints for retrieving match-level prediction picks (Over/Under 2.5 goals and Both Teams To Score)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.footprop.ai
+    description: Production server
+
+paths:
+  /picks:
+    get:
+      summary: Get daily picks (player props and match predictions)
+      description: Returns all daily picks including both player prop picks and match-level picks. Can be filtered by prediction type.
+      operationId: getDailyPicks
+      parameters:
+        - name: prediction_type
+          in: query
+          description: Filter by prediction type
+          required: false
+          schema:
+            type: string
+            enum: [player_prop, over_under_2.5, btts]
+        - name: date
+          in: query
+          description: Filter by date (YYYY-MM-DD). Defaults to today.
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: min_edge
+          in: query
+          description: Minimum edge percentage filter
+          required: false
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PickResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - ApiKeyAuth: []
+
+  /picks/match:
+    get:
+      summary: Get match-level picks only
+      description: Returns only match-level prediction picks (Over/Under 2.5 and BTTS), excluding player prop picks.
+      operationId: getMatchPicks
+      parameters:
+        - name: prediction_type
+          in: query
+          description: Filter by specific match prediction type
+          required: false
+          schema:
+            type: string
+            enum: [over_under_2.5, btts]
+        - name: date
+          in: query
+          description: Filter by date (YYYY-MM-DD). Defaults to today.
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: min_edge
+          in: query
+          description: Minimum edge percentage filter
+          required: false
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchPickResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - ApiKeyAuth: []
+
+components:
+  schemas:
+    PickResponse:
+      type: object
+      description: Daily pick response (supports both player props and match predictions)
+      properties:
+        id:
+          type: integer
+          description: Pick ID
+        player_id:
+          type: integer
+          nullable: true
+          description: Player ID (null for match-level picks)
+        match_id:
+          type: integer
+          description: Match ID
+        player_name:
+          type: string
+          nullable: true
+          description: Player name (null for match-level picks)
+        match_info:
+          type: string
+          description: Match information (e.g., "Bayern Munich vs RB Leipzig")
+        prediction_type:
+          type: string
+          enum: [player_prop, over_under_2.5, btts]
+          description: Type of prediction
+        prop_type:
+          type: string
+          description: Prop type (e.g., 'shots', 'goals', 'over_under_2.5', 'btts')
+        line:
+          type: number
+          format: float
+          nullable: true
+          description: Line value (e.g., 2.5 for Over/Under, null for BTTS)
+        recommendation:
+          type: string
+          enum: [Over, Under, Yes, No]
+          description: Recommendation
+        model_expected:
+          type: number
+          format: float
+          description: Model's expected value
+        bookmaker_prob:
+          type: number
+          format: float
+          description: Bookmaker's implied probability
+        model_prob:
+          type: number
+          format: float
+          description: Model's predicted probability
+        edge_percent:
+          type: number
+          format: float
+          description: Calculated edge percentage
+        confidence:
+          type: string
+          enum: [High, Medium, Low]
+          description: Confidence level
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when pick was created
+      required:
+        - id
+        - match_id
+        - match_info
+        - prediction_type
+        - prop_type
+        - recommendation
+        - model_expected
+        - bookmaker_prob
+        - model_prob
+        - edge_percent
+        - confidence
+        - created_at
+
+    MatchPickResponse:
+      type: object
+      description: Match-level pick response (specialized for match predictions)
+      properties:
+        id:
+          type: integer
+          description: Pick ID
+        match_id:
+          type: integer
+          description: Match ID
+        match_info:
+          type: string
+          description: Match information (e.g., "Bayern Munich vs RB Leipzig")
+        home_team:
+          type: string
+          description: Home team name
+        away_team:
+          type: string
+          description: Away team name
+        match_date:
+          type: string
+          format: date-time
+          description: Match start time
+        prediction_type:
+          type: string
+          enum: [over_under_2.5, btts]
+          description: Type of match prediction
+        recommendation:
+          type: string
+          enum: [Over, Under, Yes, No]
+          description: Recommendation (Over/Under for over_under_2.5, Yes/No for btts)
+        model_prob:
+          type: number
+          format: float
+          description: Model's predicted probability
+        bookmaker_prob:
+          type: number
+          format: float
+          description: Bookmaker's implied probability
+        edge_percent:
+          type: number
+          format: float
+          description: Calculated edge percentage
+        confidence:
+          type: string
+          enum: [High, Medium, Low]
+          description: Confidence level
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when pick was created
+      required:
+        - id
+        - match_id
+        - match_info
+        - home_team
+        - away_team
+        - match_date
+        - prediction_type
+        - recommendation
+        - model_prob
+        - bookmaker_prob
+        - edge_percent
+        - confidence
+        - created_at
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+      required:
+        - detail
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+

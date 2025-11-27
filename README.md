@@ -6,6 +6,7 @@ AI-driven sports betting tool for European football player prop predictions usin
 
 ### Prerequisites
 
+- Python 3.10-3.13 (Python 3.14 has compatibility issues with some dependencies)
 - Docker & Docker Compose
 - API Keys: [API-Football](https://www.api-football.com/) and [The Odds API](https://the-odds-api.com/)
 
@@ -43,7 +44,12 @@ AI-driven sports betting tool for European football player prop predictions usin
 5. **Train models**
 
    ```bash
-   docker-compose run --rm backend python -m app.train
+   # Train player prop models
+   docker-compose run --rm backend python -m app.ml.train
+   
+   # Train match-level models (Over/Under 2.5 and BTTS)
+   docker-compose run --rm backend python -m app.ml.train_match --prop-type over_under_2.5
+   docker-compose run --rm backend python -m app.ml.train_match --prop-type btts
    ```
 
 6. **Access API**
@@ -53,11 +59,17 @@ AI-driven sports betting tool for European football player prop predictions usin
 
 ## How It Works
 
-1. **Data Ingestion**: Fetches upcoming matches and player prop odds from APIs every 6 hours
-2. **Feature Engineering**: Calculates rolling averages and player statistics
-3. **Prediction**: Ensemble model (LightGBM + Poisson) predicts expected values
+1. **Data Ingestion**: Fetches upcoming matches, player prop odds, and match odds (Over/Under 2.5, BTTS) from APIs every 6 hours
+2. **Feature Engineering**: 
+   - Player props: Calculates rolling averages and player statistics
+   - Match predictions: Team-level statistics, head-to-head history, interaction features
+3. **Prediction**: 
+   - Player props: Ensemble model (LightGBM + Poisson) predicts expected values
+   - Match predictions: Ensemble models for Over/Under 2.5 goals and Both Teams To Score (BTTS)
 4. **Edge Calculation**: Compares model probability vs bookmaker odds to find value bets
 5. **Picks**: Generates daily picks with 8%+ edge, accessible via `/picks` endpoint
+   - Player prop picks: `GET /picks?prediction_type=player_prop`
+   - Match picks: `GET /picks/match` or `GET /picks?prediction_type=over_under_2.5`
 
 ## Development
 
