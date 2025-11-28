@@ -21,11 +21,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import structlog
-from .model import EnsembleModel
+from app.ml.models.ensemble import EnsembleModel
+from app.features.pipeline import engineer_over_under_2_5_features, engineer_btts_features
+from app.features.data_loader import load_match_level_data
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 
-MODEL_DIR = "models"
+MODEL_DIR = settings.MODEL_DIR
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 
@@ -33,14 +36,6 @@ def train_over_under_2_5_model(df: pd.DataFrame, features: List[str],
                                random_seed: int = 42) -> Dict:
     """
     Train ensemble model for Over/Under 2.5 goals prediction.
-    
-    Args:
-        df: Training DataFrame with features and target
-        features: List of feature column names
-        random_seed: Random seed for reproducibility
-    
-    Returns:
-        Dictionary with trained models and metrics
     """
     logger.info("Training Over/Under 2.5 goals model")
     
@@ -176,14 +171,6 @@ def train_btts_model(df: pd.DataFrame, features: List[str],
                      random_seed: int = 42) -> Dict:
     """
     Train ensemble model for Both Teams To Score prediction.
-    
-    Args:
-        df: Training DataFrame with features and target
-        features: List of feature column names
-        random_seed: Random seed for reproducibility
-    
-    Returns:
-        Dictionary with trained models and metrics
     """
     logger.info("Training BTTS model")
     
@@ -313,13 +300,6 @@ def train_btts_model(df: pd.DataFrame, features: List[str],
 def analyze_feature_importance(model, features: List[str]) -> pd.DataFrame:
     """
     Analyze and rank feature importance.
-    
-    Args:
-        model: Trained LightGBM model
-        features: List of feature names
-    
-    Returns:
-        DataFrame with feature importance rankings
     """
     if hasattr(model, 'feature_importances_'):
         importance_df = pd.DataFrame({
@@ -338,12 +318,7 @@ def analyze_feature_importance(model, features: List[str]) -> pd.DataFrame:
 def prepare_training_data_for_btts() -> Tuple[pd.DataFrame, List[str]]:
     """
     Prepare training data for BTTS model.
-    
-    Returns:
-        Tuple of (DataFrame with features, list of feature names)
     """
-    from .match_features import load_match_level_data, engineer_btts_features
-    
     # Load match data
     match_df = load_match_level_data()
     
@@ -390,12 +365,7 @@ def train_btts():
 def prepare_training_data_for_over_under_2_5() -> Tuple[pd.DataFrame, List[str]]:
     """
     Prepare training data for Over/Under 2.5 goals model.
-    
-    Returns:
-        Tuple of (DataFrame with features, list of feature names)
     """
-    from .match_features import load_match_level_data, engineer_over_under_2_5_features
-    
     # Load match data
     match_df = load_match_level_data()
     
@@ -453,4 +423,3 @@ if __name__ == "__main__":
         # Train both models by default
         train_over_under_2_5()
         train_btts()
-

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
-from .database import Base
+from app.infrastructure.db.session import Base
 from datetime import datetime
 
 class Match(Base):

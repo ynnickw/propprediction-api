@@ -9,10 +9,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error
 import structlog
+from app.config.settings import settings
 
 logger = structlog.get_logger()
 
-MODEL_DIR = "models"
+MODEL_DIR = settings.MODEL_DIR
 DATA_DIR = "data"
 ENRICHED_DATA_FILE = os.path.join(DATA_DIR, "player_stats_history_enriched.csv")
 
@@ -39,7 +40,6 @@ def prepare_training_data(df: pd.DataFrame, prop_type: str):
     
     # --- FEATURE ENGINEERING ---
     
-    # 0. Metadata Features (already in enriched file, but ensure types)
     # 0. Metadata Features (already in enriched file, but ensure types)
     # Note: is_striker is derived later from position
     # age, height, market_value are not available in current dataset
