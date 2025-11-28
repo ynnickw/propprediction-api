@@ -43,7 +43,7 @@ env/
 
 # Models and data
 models/
-data/
+*.csv
 *.pkl
 *.joblib
 *.h5

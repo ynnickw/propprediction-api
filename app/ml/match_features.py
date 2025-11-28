@@ -22,35 +22,92 @@ DATA_DIR = "data"
 
 def load_match_level_data(years: List[int] = None) -> pd.DataFrame:
     """
-    Load match-level datasets (D1_*.csv files).
+    Load match-level datasets from the database.
     
     Args:
-        years: List of years to load (e.g., [2020, 2021, 2022, 2023, 2024, 2025])
+        years: List of years to load (ignored for now as we load all from DB)
                If None, loads all available years
     
     Returns:
         DataFrame with match-level data
     """
-    if years is None:
-        years = [2020, 2021, 2022, 2023, 2024, 2025]
+    from sqlalchemy import create_engine
+    from dotenv import load_dotenv
     
-    dfs = []
-    for year in years:
-        file_path = os.path.join(DATA_DIR, f"D1_{year}.csv")
-        if os.path.exists(file_path):
-            logger.info(f"Loading match data from {file_path}")
-            df = pd.read_csv(file_path)
-            df['year'] = year
-            dfs.append(df)
-        else:
-            logger.warning(f"Match data file not found: {file_path}")
+    load_dotenv()
     
-    if not dfs:
-        raise FileNotFoundError(f"No match-level data files found in {DATA_DIR}")
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL not set")
+        
+    # Handle async driver for sync pandas connection
+    if database_url.startswith("postgresql+asyncpg"):
+        database_url = database_url.replace("postgresql+asyncpg", "postgresql")
+        
+    # Handle docker host for local execution
+    if "host.docker.internal" in database_url:
+        database_url = database_url.replace("host.docker.internal", "localhost")
+        
+    engine = create_engine(database_url)
     
-    combined = pd.concat(dfs, ignore_index=True)
-    logger.info(f"Loaded {len(combined)} match records")
-    return combined
+    query = """
+    SELECT 
+        start_time as "date",
+        home_team,
+        away_team,
+        home_score,
+        away_score,
+        home_half_time_goals,
+        away_half_time_goals,
+        home_shots,
+        away_shots,
+        home_shots_on_target,
+        away_shots_on_target,
+        home_corners,
+        away_corners,
+        home_fouls,
+        away_fouls,
+        home_yellow_cards,
+        away_yellow_cards,
+        home_red_cards,
+        away_red_cards,
+        odds_home,
+        odds_draw,
+        odds_away,
+        odds_over_2_5,
+        odds_under_2_5
+    FROM matches
+    """
+    
+    logger.info("Loading match data from database")
+    try:
+        df = pd.read_sql(query, engine)
+        
+        # Ensure date is datetime
+        df.loc[:, 'date'] = pd.to_datetime(df['date'])
+        
+        # Ensure numeric columns are float (handle None/NULL from DB)
+        numeric_cols = [
+            'home_score', 'away_score', 'home_half_time_goals', 'away_half_time_goals',
+            'home_shots', 'away_shots', 'home_shots_on_target', 'away_shots_on_target',
+            'home_corners', 'away_corners', 'home_fouls', 'away_fouls',
+            'home_yellow_cards', 'away_yellow_cards', 'home_red_cards', 'away_red_cards',
+            'odds_home', 'odds_draw', 'odds_away', 'odds_over_2_5', 'odds_under_2_5'
+        ]
+        
+        for col in numeric_cols:
+            if col in df.columns:
+                df.loc[:, col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # Add year column for compatibility
+        df.loc[:, 'year'] = df['date'].dt.year
+        
+        logger.info(f"Loaded {len(df)} match records from database")
+        return df
+        
+    except Exception as e:
+        logger.error(f"Failed to load data from database: {e}")
+        raise
 
 
 def load_player_level_data() -> pd.DataFrame:
@@ -376,65 +433,60 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     logger.info("Engineering Over/Under 2.5 features")
     
     # Validate and prepare
-    df = _validate_and_prepare_dataframe(match_df, ['HomeTeam', 'AwayTeam'])
+    df = _validate_and_prepare_dataframe(match_df, ['home_team', 'away_team'])
     if df.empty:
         return df
     
     # Create target variables if not already present
     if 'over_2_5' not in df.columns:
-        if 'FTHG' in df.columns and 'FTAG' in df.columns:
-            df.loc[:, 'total_goals'] = df['FTHG'] + df['FTAG']
+        if 'home_score' in df.columns and 'away_score' in df.columns:
+            df.loc[:, 'total_goals'] = df['home_score'] + df['away_score']
             df.loc[:, 'over_2_5'] = (df['total_goals'] > 2.5).astype(int)
-            df.loc[:, 'btts'] = ((df['FTHG'] > 0) & (df['FTAG'] > 0)).astype(int)
+            df.loc[:, 'btts'] = ((df['home_score'] > 0) & (df['away_score'] > 0)).astype(int)
         else:
-            logger.warning("FTHG/FTAG columns not found, cannot create over_2_5 target")
+            logger.warning("home_score/away_score columns not found, cannot create over_2_5 target")
             df.loc[:, 'over_2_5'] = np.nan
     
     # Team goals scored statistics
-    goals_configs = [
-        {'value_col': 'FTHG', 'prefix_template': '{team_type}_goals', 'windows': [5, 10], 'include_season': True},
-        {'value_col': 'FTAG', 'prefix_template': '{team_type}_goals', 'windows': [5, 10], 'include_season': True}
-    ]
-    
     # Add goals scored features for home team
-    df = _add_rolling_averages(df, 'HomeTeam', 'FTHG', 'home_goals', [5, 10])
-    df = _add_expanding_average(df, 'HomeTeam', 'FTHG', 'home_goals')
+    df = _add_rolling_averages(df, 'home_team', 'home_score', 'home_goals', [5, 10])
+    df = _add_expanding_average(df, 'home_team', 'home_score', 'home_goals')
     
     # Add goals scored features for away team
-    df = _add_rolling_averages(df, 'AwayTeam', 'FTAG', 'away_goals', [5, 10])
-    df = _add_expanding_average(df, 'AwayTeam', 'FTAG', 'away_goals')
+    df = _add_rolling_averages(df, 'away_team', 'away_score', 'away_goals', [5, 10])
+    df = _add_expanding_average(df, 'away_team', 'away_score', 'away_goals')
     
     # Goals conceded (opponent perspective)
-    df = _add_rolling_averages(df, 'HomeTeam', 'FTAG', 'home_goals_conceded', [5, 10])
-    df = _add_expanding_average(df, 'HomeTeam', 'FTAG', 'home_goals_conceded')
+    df = _add_rolling_averages(df, 'home_team', 'away_score', 'home_goals_conceded', [5, 10])
+    df = _add_expanding_average(df, 'home_team', 'away_score', 'home_goals_conceded')
     
-    df = _add_rolling_averages(df, 'AwayTeam', 'FTHG', 'away_goals_conceded', [5, 10])
-    df = _add_expanding_average(df, 'AwayTeam', 'FTHG', 'away_goals_conceded')
+    df = _add_rolling_averages(df, 'away_team', 'home_score', 'away_goals_conceded', [5, 10])
+    df = _add_expanding_average(df, 'away_team', 'home_score', 'away_goals_conceded')
     
     # Shots statistics (if available)
-    for team_type in ['Home', 'Away']:
-        team_col = f'{team_type}Team'
-        shots_col = f'{team_type[0]}S'
-        shots_on_target_col = f'{team_type[0]}ST'
+    for team_type in ['home', 'away']:
+        team_col = f'{team_type}_team'
+        shots_col = f'{team_type}_shots'
+        shots_on_target_col = f'{team_type}_shots_on_target'
         
         if shots_col in df.columns:
-            df = _add_rolling_averages(df, team_col, shots_col, f'{team_type.lower()}_shots', [5])
+            df = _add_rolling_averages(df, team_col, shots_col, f'{team_type}_shots', [5])
         
         if shots_on_target_col in df.columns:
-            df = _add_rolling_averages(df, team_col, shots_on_target_col, f'{team_type.lower()}_shots_on_target', [5])
+            df = _add_rolling_averages(df, team_col, shots_on_target_col, f'{team_type}_shots_on_target', [5])
     
     # Home/Away splits
-    for team_type in ['Home', 'Away']:
-        team_col = f'{team_type}Team'
-        goals_col = f'FT{team_type[0]}G'
-        is_home = 1 if team_type == 'Home' else 0
+    for team_type in ['home', 'away']:
+        team_col = f'{team_type}_team'
+        goals_col = f'{team_type}_score'
+        is_home = 1 if team_type == 'home' else 0
         
         # Filter by home/away
-        home_away_df = df[df.apply(lambda row: (row['HomeTeam'] == row[team_col] and is_home == 1) or 
-                                   (row['AwayTeam'] == row[team_col] and is_home == 0), axis=1)]
+        home_away_df = df[df.apply(lambda row: (row['home_team'] == row[team_col] and is_home == 1) or 
+                                   (row['away_team'] == row[team_col] and is_home == 0), axis=1)]
         
         if len(home_away_df) > 0:
-            feature_name = f'{team_type.lower()}_goals_avg_{"home" if is_home else "away"}'
+            feature_name = f'{team_type}_goals_avg_{"home" if is_home else "away"}'
             values = df.groupby(team_col)[goals_col].transform(
                 lambda x: x.rolling(10, min_periods=1).mean().shift(1)
             )
@@ -442,7 +494,7 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     
     # Head-to-head history
     h2h_values = df.apply(
-        lambda row: calculate_h2h_total_goals_avg(df, row['HomeTeam'], row['AwayTeam'], row['date']), 
+        lambda row: calculate_h2h_total_goals_avg(df, row['home_team'], row['away_team'], row['date']), 
         axis=1
     )
     df.loc[:, 'h2h_total_goals_avg'] = h2h_values
@@ -462,9 +514,8 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     )
     
     # Bookmaker odds features
-    if 'B365>2.5' in df.columns:
-        df.loc[:, 'odds_over_2_5'] = df['B365>2.5']
-        df.loc[:, 'odds_under_2_5'] = df['B365<2.5']
+    if 'odds_over_2_5' in df.columns:
+        # Columns are already named correctly from DB
         df.loc[:, 'implied_prob_over'] = 1.0 / df['odds_over_2_5'].fillna(2.0)
         df.loc[:, 'implied_prob_under'] = 1.0 / df['odds_under_2_5'].fillna(2.0)
     
@@ -492,16 +543,16 @@ def calculate_h2h_total_goals_avg(df: pd.DataFrame, home_team: str, away_team: s
     """
     # Find previous meetings between these teams
     h2h_matches = df[
-        ((df['HomeTeam'] == home_team) & (df['AwayTeam'] == away_team)) |
-        ((df['HomeTeam'] == away_team) & (df['AwayTeam'] == home_team))
+        ((df['home_team'] == home_team) & (df['away_team'] == away_team)) |
+        ((df['home_team'] == away_team) & (df['away_team'] == home_team))
     ]
     h2h_matches = h2h_matches[h2h_matches['date'] < current_date].tail(n_matches)
     
     if len(h2h_matches) == 0:
         return 0.0
     
-    if 'FTHG' in h2h_matches.columns and 'FTAG' in h2h_matches.columns:
-        total_goals = (h2h_matches['FTHG'] + h2h_matches['FTAG']).mean()
+    if 'home_score' in h2h_matches.columns and 'away_score' in h2h_matches.columns:
+        total_goals = (h2h_matches['home_score'] + h2h_matches['away_score']).mean()
         return float(total_goals)
     
     return 0.0
@@ -520,53 +571,53 @@ def engineer_btts_features(match_df: pd.DataFrame) -> pd.DataFrame:
     logger.info("Engineering BTTS features")
     
     # Validate and prepare
-    df = _validate_and_prepare_dataframe(match_df, ['HomeTeam', 'AwayTeam'])
+    df = _validate_and_prepare_dataframe(match_df, ['home_team', 'away_team'])
     if df.empty:
         return df
     
     # Create target variables if not already present
     if 'btts' not in df.columns:
-        if 'FTHG' in df.columns and 'FTAG' in df.columns:
+        if 'home_score' in df.columns and 'away_score' in df.columns:
             if 'total_goals' not in df.columns:
-                df.loc[:, 'total_goals'] = df['FTHG'] + df['FTAG']
-            df.loc[:, 'btts'] = ((df['FTHG'] > 0) & (df['FTAG'] > 0)).astype(int)
+                df.loc[:, 'total_goals'] = df['home_score'] + df['away_score']
+            df.loc[:, 'btts'] = ((df['home_score'] > 0) & (df['away_score'] > 0)).astype(int)
             if 'over_2_5' not in df.columns:
                 df.loc[:, 'over_2_5'] = (df['total_goals'] > 2.5).astype(int)
         else:
-            logger.warning("FTHG/FTAG columns not found, cannot create btts target")
+            logger.warning("home_score/away_score columns not found, cannot create btts target")
             df.loc[:, 'btts'] = np.nan
     
     # Team scoring consistency features
-    for team_type in ['Home', 'Away']:
-        team_col = f'{team_type}Team'
-        goals_col = f'FT{team_type[0]}G'  # FTHG or FTAG
-        opponent_goals_col = f'FT{"A" if team_type == "Home" else "H"}G'  # Opponent goals
+    for team_type in ['home', 'away']:
+        team_col = f'{team_type}_team'
+        goals_col = f'{team_type}_score'  # home_score or away_score
+        opponent_goals_col = f'{"away" if team_type == "home" else "home"}_score'  # Opponent goals
         
         # Scoring rate (percentage of matches where team scored)
-        df = _add_binary_rate_features(df, team_col, goals_col, f'{team_type.lower()}_scoring', lambda x: x > 0)
+        df = _add_binary_rate_features(df, team_col, goals_col, f'{team_type}_scoring', lambda x: x > 0)
         
         # Average goals scored
-        df = _add_rolling_averages(df, team_col, goals_col, f'{team_type.lower()}_goals', [5])
-        df = _add_expanding_average(df, team_col, goals_col, f'{team_type.lower()}_goals')
+        df = _add_rolling_averages(df, team_col, goals_col, f'{team_type}_goals', [5])
+        df = _add_expanding_average(df, team_col, goals_col, f'{team_type}_goals')
         
         # Scoreless frequency (matches with 0 goals)
         scoreless_values = df.groupby(team_col)[goals_col].transform(
             lambda x: (x == 0).expanding().mean().shift(1)
         )
-        df.loc[:, f'{team_type.lower()}_scoreless_rate'] = scoreless_values
+        df.loc[:, f'{team_type}_scoreless_rate'] = scoreless_values
         
         # Conceding rate (percentage of matches where team conceded)
-        df = _add_binary_rate_features(df, team_col, opponent_goals_col, f'{team_type.lower()}_conceding', lambda x: x > 0)
+        df = _add_binary_rate_features(df, team_col, opponent_goals_col, f'{team_type}_conceding', lambda x: x > 0)
         
         # Clean sheet frequency (matches with 0 goals conceded)
         clean_sheet_values = df.groupby(team_col)[opponent_goals_col].transform(
             lambda x: (x == 0).expanding().mean().shift(1)
         )
-        df.loc[:, f'{team_type.lower()}_clean_sheet_rate'] = clean_sheet_values
+        df.loc[:, f'{team_type}_clean_sheet_rate'] = clean_sheet_values
     
     # Head-to-head BTTS history
     h2h_btts_values = df.apply(
-        lambda row: calculate_h2h_btts_rate(df, row['HomeTeam'], row['AwayTeam'], row['date']),
+        lambda row: calculate_h2h_btts_rate(df, row['home_team'], row['away_team'], row['date']),
         axis=1
     )
     df.loc[:, 'h2h_btts_rate'] = h2h_btts_values
@@ -609,16 +660,16 @@ def calculate_h2h_btts_rate(df: pd.DataFrame, home_team: str, away_team: str,
     """
     # Find previous meetings between these teams
     h2h_matches = df[
-        ((df['HomeTeam'] == home_team) & (df['AwayTeam'] == away_team)) |
-        ((df['HomeTeam'] == away_team) & (df['AwayTeam'] == home_team))
+        ((df['home_team'] == home_team) & (df['away_team'] == away_team)) |
+        ((df['home_team'] == away_team) & (df['away_team'] == home_team))
     ]
     h2h_matches = h2h_matches[h2h_matches['date'] < current_date].tail(n_matches)
     
     if len(h2h_matches) == 0:
         return 0.0
     
-    if 'FTHG' in h2h_matches.columns and 'FTAG' in h2h_matches.columns:
-        btts_count = ((h2h_matches['FTHG'] > 0) & (h2h_matches['FTAG'] > 0)).sum()
+    if 'home_score' in h2h_matches.columns and 'away_score' in h2h_matches.columns:
+        btts_count = ((h2h_matches['home_score'] > 0) & (h2h_matches['away_score'] > 0)).sum()
         btts_rate = btts_count / len(h2h_matches)
         return float(btts_rate)
     

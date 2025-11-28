@@ -20,30 +20,23 @@ logger = structlog.get_logger()
 
 
 def validate_data_availability():
-    """Validate that required data files exist."""
+    """Validate that database connection works and data exists."""
     logger.info("Validating data availability...")
     
-    data_dir = Path("data")
-    required_files = [
-        "D1_2020.csv",
-        "D1_2021.csv", 
-        "D1_2022.csv",
-        "D1_2023.csv",
-        "D1_2024.csv",
-        "D1_2025.csv"
-    ]
-    
-    missing_files = []
-    for file in required_files:
-        if not (data_dir / file).exists():
-            missing_files.append(file)
-    
-    if missing_files:
-        logger.warning(f"Missing data files: {missing_files}")
+    try:
+        from app.ml.match_features import load_match_level_data
+        df = load_match_level_data()
+        
+        if len(df) == 0:
+            logger.warning("Database connection successful but no matches found")
+            return False
+            
+        logger.info(f"✓ Successfully loaded {len(df)} matches from database")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to connect to database or load data: {e}")
         return False
-    
-    logger.info("✓ All required data files exist")
-    return True
 
 
 def validate_feature_engineering():
@@ -221,11 +214,11 @@ def validate_api_endpoints():
         from app.core.schemas import PickResponse
         
         # Check PickResponse schema
-        if not hasattr(PickResponse, 'prediction_type'):
+        if 'prediction_type' not in PickResponse.model_fields:
             logger.error("PickResponse schema missing prediction_type field")
             return False
         
-        if not hasattr(PickResponse, 'player_id'):
+        if 'player_id' not in PickResponse.model_fields:
             logger.error("PickResponse schema missing player_id field")
             return False
         

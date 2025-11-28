@@ -316,17 +316,29 @@ async def generate_match_predictions(session):
             # Over/Under 2.5 prediction
             if match.odds_over_2_5:
                 try:
-                    # Get feature columns (exclude metadata)
+                    # Get feature columns (exclude metadata and raw stats to match training)
                     exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
                                     'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
+                                    'home_team', 'away_team', 'home_score', 'away_score',
+                                    'home_half_time_goals', 'away_half_time_goals',
+                                    'home_shots', 'away_shots', 'home_shots_on_target', 'away_shots_on_target',
+                                    'home_corners', 'away_corners', 'home_fouls', 'away_fouls',
+                                    'home_yellow_cards', 'away_yellow_cards', 'home_red_cards', 'away_red_cards',
+                                    'odds_home', 'odds_draw', 'odds_away', 'odds_over_2_5', 'odds_under_2_5',
+                                    'odds_btts_yes', 'odds_btts_no',
                                     'total_goals', 'over_2_5', 'btts', 'year']
                     feature_cols = [col for col in features_over_under.columns 
                                    if col not in exclude_cols and pd.api.types.is_numeric_dtype(features_over_under[col])]
                     
                     if len(feature_cols) > 0:
+                        if match.home_team == 'Borussia Mönchengladbach':
+                            logger.info(f"Features for {match.home_team} vs {match.away_team}:")
+                            logger.info(features_over_under[feature_cols].iloc[0].to_dict())
+                        
                         pred_result = predict_match_outcome(features_over_under[feature_cols], 'over_under_2.5')
                         model_prob = pred_result['model_prob']
                         recommendation = pred_result['recommendation']
+                        expected_value = pred_result.get('expected_value', 0.0)
                         
                         # Calculate edge
                         if recommendation == 'Over' and match.odds_over_2_5:
@@ -342,7 +354,8 @@ async def generate_match_predictions(session):
                                 'match': match,
                                 'prediction_type': 'over_under_2.5',
                                 'recommendation': recommendation,
-                                'model_prob': model_prob,
+                                'model_prob': (1 - model_prob) if recommendation == 'Under' else model_prob,
+                                'expected_value': expected_value,
                                 'bookmaker_prob': bookmaker_prob,
                                 'edge_percent': edge,
                                 'odds': match.odds_over_2_5 if recommendation == 'Over' else match.odds_under_2_5
@@ -353,16 +366,31 @@ async def generate_match_predictions(session):
             # BTTS prediction
             if match.odds_btts_yes:
                 try:
-                    exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
-                                    'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
-                                    'total_goals', 'over_2_5', 'btts', 'year']
-                    feature_cols = [col for col in features_btts.columns 
-                                   if col not in exclude_cols and pd.api.types.is_numeric_dtype(features_btts[col])]
+                    # Explicitly select features used in training (21 features)
+                    btts_features_list = [
+                        'home_scoring_rate_season', 'home_scoring_rate_last_5', 'home_goals_avg_last_5', 
+                        'home_goals_avg_season', 'home_scoreless_rate', 'home_conceding_rate_season', 
+                        'home_conceding_rate_last_5', 'home_clean_sheet_rate', 'away_scoring_rate_season', 
+                        'away_scoring_rate_last_5', 'away_goals_avg_last_5', 'away_goals_avg_season', 
+                        'away_scoreless_rate', 'away_conceding_rate_season', 'away_conceding_rate_last_5', 
+                        'away_clean_sheet_rate', 'h2h_btts_rate', 'combined_scoring_probability', 
+                        'defensive_weakness_indicator', 'home_scoring_vs_away_conceding', 
+                        'away_scoring_vs_home_conceding'
+                    ]
+                    
+                    # Ensure all features exist
+                    missing_cols = [col for col in btts_features_list if col not in features_btts.columns]
+                    if missing_cols:
+                        logger.warning(f"Missing BTTS features: {missing_cols}")
+                        continue
+                        
+                    feature_cols = btts_features_list
                     
                     if len(feature_cols) > 0:
                         pred_result = predict_match_outcome(features_btts[feature_cols], 'btts')
                         model_prob = pred_result['model_prob']
                         recommendation = pred_result['recommendation']
+                        expected_value = pred_result.get('expected_value', 0.0)
                         
                         # Calculate edge
                         if recommendation == 'Yes' and match.odds_btts_yes:
@@ -381,7 +409,8 @@ async def generate_match_predictions(session):
                                 'match': match,
                                 'prediction_type': 'btts',
                                 'recommendation': recommendation,
-                                'model_prob': model_prob,
+                                'model_prob': (1 - model_prob) if recommendation == 'No' else model_prob,
+                                'expected_value': expected_value,
                                 'bookmaker_prob': bookmaker_prob,
                                 'edge_percent': edge,
                                 'odds': odds
@@ -412,7 +441,7 @@ async def generate_match_predictions(session):
                     prop_type=pred['prediction_type'],
                     line=2.5 if pred['prediction_type'] == 'over_under_2.5' else None,
                     recommendation=pred['recommendation'],
-                    model_expected=pred['model_prob'],
+                    model_expected=pred.get('expected_value', 0.0),
                     bookmaker_prob=pred['bookmaker_prob'],
                     model_prob=pred['model_prob'],
                     edge_percent=pred['edge_percent'],

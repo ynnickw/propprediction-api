@@ -14,6 +14,26 @@ class Match(Base):
     start_time = Column(DateTime)
     status = Column(String)
     
+    # Match Scores
+    home_score = Column(Integer, nullable=True)
+    away_score = Column(Integer, nullable=True)
+    home_half_time_goals = Column(Integer, nullable=True)
+    away_half_time_goals = Column(Integer, nullable=True)
+    
+    # Match Statistics
+    home_shots = Column(Integer, nullable=True)
+    away_shots = Column(Integer, nullable=True)
+    home_shots_on_target = Column(Integer, nullable=True)
+    away_shots_on_target = Column(Integer, nullable=True)
+    home_corners = Column(Integer, nullable=True)
+    away_corners = Column(Integer, nullable=True)
+    home_fouls = Column(Integer, nullable=True)
+    away_fouls = Column(Integer, nullable=True)
+    home_yellow_cards = Column(Integer, nullable=True)
+    away_yellow_cards = Column(Integer, nullable=True)
+    home_red_cards = Column(Integer, nullable=True)
+    away_red_cards = Column(Integer, nullable=True)
+    
     # Match Odds (1x2)
     odds_home = Column(Float, nullable=True)
     odds_draw = Column(Float, nullable=True)

@@ -126,22 +126,26 @@ def prepare_match_features_for_prediction(match, historical_matches_df: Optional
     from .match_features import engineer_over_under_2_5_features, engineer_btts_features
     
     # Create a minimal DataFrame with match info
+    # Create a minimal DataFrame with match info
     match_data = {
-        'Date': match.start_time.strftime('%d/%m/%Y') if match.start_time else '',
-        'HomeTeam': match.home_team,
-        'AwayTeam': match.away_team,
-        'FTHG': 0,  # Placeholder for upcoming match
-        'FTAG': 0,  # Placeholder for upcoming match
-        'HS': 0,
-        'AS': 0,
-        'HST': 0,
-        'AST': 0,
-        'B365>2.5': match.odds_over_2_5 if match.odds_over_2_5 else 2.0,
-        'B365<2.5': match.odds_under_2_5 if match.odds_under_2_5 else 2.0
+        'date': match.start_time if match.start_time else datetime.now(),
+        'home_team': match.home_team,
+        'away_team': match.away_team,
+        'home_score': 0,  # Placeholder for upcoming match
+        'away_score': 0,  # Placeholder for upcoming match
+        'home_shots': 0,
+        'away_shots': 0,
+        'home_shots_on_target': 0,
+        'away_shots_on_target': 0,
+        'odds_over_2_5': match.odds_over_2_5 if match.odds_over_2_5 else 2.0,
+        'odds_under_2_5': match.odds_under_2_5 if match.odds_under_2_5 else 2.0,
+        'odds_btts_yes': match.odds_btts_yes if match.odds_btts_yes else 2.0,
+        'odds_btts_no': match.odds_btts_no if match.odds_btts_no else 2.0
     }
     
     match_df = pd.DataFrame([match_data])
-    match_df['date'] = pd.to_datetime(match.start_time) if match.start_time else pd.Timestamp.now()
+    match_df = pd.DataFrame([match_data])
+    # date is already datetime in the dict
     
     # If historical data available, merge for better features
     if historical_matches_df is not None and len(historical_matches_df) > 0:
@@ -152,9 +156,22 @@ def prepare_match_features_for_prediction(match, historical_matches_df: Optional
         df_over_under = engineer_over_under_2_5_features(combined_df)
         df_btts = engineer_btts_features(combined_df)
         
-        # Get features for the last row (our match)
-        features_over_under = df_over_under.iloc[[-1]]
-        features_btts = df_btts.iloc[[-1]]
+        # Get features for the specific match (it might not be the last row due to sorting)
+        # We use the match date and teams to identify the row
+        mask = (
+            (df_over_under['date'] == match_data['date']) & 
+            (df_over_under['home_team'] == match_data['home_team']) & 
+            (df_over_under['away_team'] == match_data['away_team'])
+        )
+        
+        if mask.any():
+            features_over_under = df_over_under[mask].head(1)
+            features_btts = df_btts[mask].head(1)
+        else:
+            # Fallback (should not happen)
+            logger.warning("Could not find match row after feature engineering, using last row")
+            features_over_under = df_over_under.iloc[[-1]]
+            features_btts = df_btts.iloc[[-1]]
         
         return features_over_under, features_btts
     else:

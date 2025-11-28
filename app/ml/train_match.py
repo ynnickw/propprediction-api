@@ -236,13 +236,42 @@ def train_btts_model(df: pd.DataFrame, features: List[str],
     best_model_idx = np.argmax(lgb_scores)
     final_lgb_model = lgb_models[best_model_idx]
     
-    # For BTTS, Poisson is less relevant (it's binary, not count data)
-    # But we can still use it by modeling expected goals for each team
-    # For simplicity, we'll skip Poisson for BTTS and use LightGBM only
-    final_poisson_model = None
-    final_scaler = None
+    # Train Poisson models for Home and Away goals
+    logger.info("Training Poisson models for BTTS...")
     
-    # Save models
+    poisson_home_model = None
+    poisson_away_model = None
+    scaler_home = None
+    scaler_away = None
+    
+    try:
+        # Home Goals Model
+        y_home = df['home_score']
+        scaler_home = StandardScaler()
+        X_scaled = scaler_home.fit_transform(X)
+        
+        poisson_home = PoissonRegressor(alpha=0.1, max_iter=200)
+        poisson_home.fit(X_scaled, y_home)
+        poisson_home_model = poisson_home
+        
+        # Away Goals Model
+        y_away = df['away_score']
+        scaler_away = StandardScaler()
+        # We can reuse X_scaled as features are the same
+        
+        poisson_away = PoissonRegressor(alpha=0.1, max_iter=200)
+        poisson_away.fit(X_scaled, y_away)
+        poisson_away_model = poisson_away
+        
+        # Save models
+        joblib.dump({'model': poisson_home_model, 'scaler': scaler_home}, os.path.join(MODEL_DIR, "poisson_home_goals.joblib"))
+        joblib.dump({'model': poisson_away_model, 'scaler': scaler_home}, os.path.join(MODEL_DIR, "poisson_away_goals.joblib"))
+        logger.info("Saved Poisson home/away goal models")
+        
+    except Exception as e:
+        logger.error(f"Error training Poisson models: {e}")
+    
+    # Save LightGBM model
     lgb_path = os.path.join(MODEL_DIR, "lgbm_btts.txt")
     final_lgb_model.save_model(lgb_path)
     logger.info(f"Saved LightGBM BTTS model to {lgb_path}")
@@ -273,8 +302,10 @@ def train_btts_model(df: pd.DataFrame, features: List[str],
     
     return {
         'lgb_model': final_lgb_model,
-        'poisson_model': final_poisson_model,
-        'scaler': final_scaler,
+        'poisson_home_model': poisson_home_model,
+        'poisson_away_model': poisson_away_model,
+        'scaler_home': scaler_home,
+        'scaler_away': scaler_away,
         'metrics': metrics
     }
 
@@ -322,6 +353,12 @@ def prepare_training_data_for_btts() -> Tuple[pd.DataFrame, List[str]]:
     # Select feature columns (exclude target and metadata)
     exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
                     'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
+                    'home_team', 'away_team', 'home_score', 'away_score',
+                    'home_half_time_goals', 'away_half_time_goals',
+                    'home_shots', 'away_shots', 'home_shots_on_target', 'away_shots_on_target',
+                    'home_corners', 'away_corners', 'home_fouls', 'away_fouls',
+                    'home_yellow_cards', 'away_yellow_cards', 'home_red_cards', 'away_red_cards',
+                    'odds_home', 'odds_draw', 'odds_away', 'odds_over_2_5', 'odds_under_2_5',
                     'total_goals', 'over_2_5', 'btts', 'year']
     
     feature_cols = [col for col in df.columns if col not in exclude_cols and df[col].dtype in [np.float64, np.int64]]
@@ -368,6 +405,12 @@ def prepare_training_data_for_over_under_2_5() -> Tuple[pd.DataFrame, List[str]]
     # Select feature columns (exclude target and metadata)
     exclude_cols = ['date', 'Date', 'Div', 'Time', 'HomeTeam', 'AwayTeam', 
                     'FTHG', 'FTAG', 'FTR', 'HTHG', 'HTAG', 'HTR',
+                    'home_team', 'away_team', 'home_score', 'away_score',
+                    'home_half_time_goals', 'away_half_time_goals',
+                    'home_shots', 'away_shots', 'home_shots_on_target', 'away_shots_on_target',
+                    'home_corners', 'away_corners', 'home_fouls', 'away_fouls',
+                    'home_yellow_cards', 'away_yellow_cards', 'home_red_cards', 'away_red_cards',
+                    'odds_home', 'odds_draw', 'odds_away', 'odds_over_2_5', 'odds_under_2_5',
                     'total_goals', 'over_2_5', 'btts', 'year']
     
     feature_cols = [col for col in df.columns if col not in exclude_cols and df[col].dtype in [np.float64, np.int64]]

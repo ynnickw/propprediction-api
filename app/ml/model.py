@@ -15,7 +15,13 @@ class EnsembleModel:
     def __init__(self, prop_type: str):
         self.prop_type = prop_type
         self.lgb_model = self._load_lgb()
-        self.poisson_model = self._load_poisson()
+        if prop_type == 'btts':
+            self.poisson_home, self.poisson_away = self._load_poisson_btts()
+            self.poisson_model = None
+        else:
+            self.poisson_model = self._load_poisson()
+            self.poisson_home = None
+            self.poisson_away = None
     
     def _load_lgb(self):
         model_path = os.path.join(MODEL_DIR, f"lgbm_{self.prop_type}.txt")
@@ -27,11 +33,17 @@ class EnsembleModel:
         model_path = os.path.join(MODEL_DIR, f"poisson_{self.prop_type}.joblib")
         if os.path.exists(model_path):
             loaded = joblib.load(model_path)
-            # Handle both dict format (with scaler) and direct model
             if isinstance(loaded, dict):
                 return loaded
             return loaded
         return None
+
+    def _load_poisson_btts(self):
+        home_path = os.path.join(MODEL_DIR, "poisson_home_goals.joblib")
+        away_path = os.path.join(MODEL_DIR, "poisson_away_goals.joblib")
+        home_model = joblib.load(home_path) if os.path.exists(home_path) else None
+        away_model = joblib.load(away_path) if os.path.exists(away_path) else None
+        return home_model, away_model
 
     def predict_expected_value(self, features: pd.DataFrame) -> float:
         """
@@ -196,30 +208,67 @@ def predict_match_outcome(features: pd.DataFrame, prediction_type: str) -> Dict[
             logger.warning(f"LightGBM prediction failed: {e}")
     
     # Poisson prediction (convert expected goals to Over/Under probability)
-    if poisson_model:
-        try:
-            if isinstance(poisson_model, dict):
-                poisson_m = poisson_model.get('model')
-                scaler = poisson_model.get('scaler')
-                if poisson_m and scaler:
-                    from sklearn.preprocessing import StandardScaler
-                    features_scaled = scaler.transform(features)
-                    expected_goals = poisson_m.predict(features_scaled)[0]
+    if prediction_type == 'over_under_2.5':
+        if poisson_model:
+            try:
+                if isinstance(poisson_model, dict):
+                    poisson_m = poisson_model.get('model')
+                    scaler = poisson_model.get('scaler')
+                    if poisson_m and scaler:
+                        from sklearn.preprocessing import StandardScaler
+                        features_scaled = scaler.transform(features)
+                        expected_goals = poisson_m.predict(features_scaled)[0]
+                    else:
+                        expected_goals = poisson_m.predict(features)[0]
                 else:
-                    expected_goals = poisson_m.predict(features)[0]
-            else:
-                expected_goals = poisson_model.predict(features)[0]
-            
-            # Convert to Over/Under probability
-            if prediction_type == 'over_under_2.5':
+                    expected_goals = poisson_model.predict(features)[0]
+                
+                # Convert to Over/Under probability
                 from scipy.stats import poisson as poisson_dist
                 pois_prob = 1 - poisson_dist.cdf(2, max(0, expected_goals))
-            else:
-                pois_prob = 0.5  # Placeholder for BTTS
-            predictions['poisson'] = float(pois_prob)
-            weights['poisson'] = 0.4
-        except Exception as e:
-            logger.warning(f"Poisson prediction failed: {e}")
+                predictions['poisson'] = float(pois_prob)
+                weights['poisson'] = 0.4
+            except Exception as e:
+                logger.warning(f"Poisson prediction failed: {e}")
+                
+    elif prediction_type == 'btts':
+        # BTTS Poisson Logic
+        if model.poisson_home and model.poisson_away:
+            try:
+                # Predict Home Goals
+                ph_model = model.poisson_home.get('model')
+                ph_scaler = model.poisson_home.get('scaler')
+                if ph_scaler:
+                    feat_scaled = ph_scaler.transform(features)
+                    exp_home = ph_model.predict(feat_scaled)[0]
+                else:
+                    exp_home = ph_model.predict(features)[0]
+                
+                # Predict Away Goals
+                pa_model = model.poisson_away.get('model')
+                pa_scaler = model.poisson_away.get('scaler')
+                if pa_scaler:
+                    feat_scaled = pa_scaler.transform(features)
+                    exp_away = pa_model.predict(feat_scaled)[0]
+                else:
+                    exp_away = pa_model.predict(features)[0]
+                
+                # Calculate P(BTTS) = P(Home > 0) * P(Away > 0)
+                # P(X > 0) = 1 - P(X = 0) = 1 - exp(-lambda)
+                from scipy.stats import poisson as poisson_dist
+                prob_home_score = 1 - poisson_dist.pmf(0, max(0, exp_home))
+                prob_away_score = 1 - poisson_dist.pmf(0, max(0, exp_away))
+                
+                pois_prob = prob_home_score * prob_away_score
+                predictions['poisson'] = float(pois_prob)
+                weights['poisson'] = 0.4
+                
+                # Adjust weights since LightGBM might be weak for BTTS
+                weights['lightgbm'] = 0.5
+                weights['poisson'] = 0.5
+                
+            except Exception as e:
+                logger.warning(f"Poisson BTTS prediction failed: {e}")
     
     # Ensemble (weighted average)
     total_weight = sum(weights.values())
@@ -234,9 +283,58 @@ def predict_match_outcome(features: pd.DataFrame, prediction_type: str) -> Dict[
     else:  # btts
         recommendation = 'Yes' if model_prob > 0.5 else 'No'
     
+    # Calculate expected value (for display/logging)
+    expected_value = 0.0
+    
+    if prediction_type == 'over_under_2.5':
+        # For O/U, expected value is total goals
+        if poisson_model:
+            try:
+                if isinstance(poisson_model, dict):
+                    poisson_m = poisson_model.get('model')
+                    scaler = poisson_model.get('scaler')
+                    if poisson_m and scaler:
+                        from sklearn.preprocessing import StandardScaler
+                        features_scaled = scaler.transform(features)
+                        expected_value = float(poisson_m.predict(features_scaled)[0])
+                    else:
+                        expected_value = float(poisson_m.predict(features)[0])
+                else:
+                    expected_value = float(poisson_model.predict(features)[0])
+            except Exception:
+                pass
+                
+    elif prediction_type == 'btts':
+        # For BTTS, expected value could be sum of expected home + away goals
+        # This gives an idea of "game openness"
+        if model.poisson_home and model.poisson_away:
+            try:
+                # Home Goals
+                ph_model = model.poisson_home.get('model')
+                ph_scaler = model.poisson_home.get('scaler')
+                if ph_scaler:
+                    feat_scaled = ph_scaler.transform(features)
+                    exp_home = float(ph_model.predict(feat_scaled)[0])
+                else:
+                    exp_home = float(ph_model.predict(features)[0])
+                
+                # Away Goals
+                pa_model = model.poisson_away.get('model')
+                pa_scaler = model.poisson_away.get('scaler')
+                if pa_scaler:
+                    feat_scaled = pa_scaler.transform(features)
+                    exp_away = float(pa_model.predict(feat_scaled)[0])
+                else:
+                    exp_away = float(pa_model.predict(features)[0])
+                    
+                expected_value = exp_home + exp_away
+            except Exception:
+                pass
+
     return {
         'model_prob': float(model_prob),
         'recommendation': recommendation,
         'predictions': predictions,
-        'model_obj': model
+        'model_obj': model,
+        'expected_value': expected_value
     }
