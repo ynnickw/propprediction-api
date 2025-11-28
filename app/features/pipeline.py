@@ -119,12 +119,17 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     
     # Bookmaker odds features
     if 'odds_over_2_5' in df.columns:
-        df.loc[:, 'implied_prob_over'] = 1.0 / df['odds_over_2_5'].fillna(2.0)
-        df.loc[:, 'implied_prob_under'] = 1.0 / df['odds_under_2_5'].fillna(2.0)
+        # Replace 0 with NaN to avoid division by zero
+        odds_over = df['odds_over_2_5'].replace(0, np.nan).fillna(2.0)
+        odds_under = df['odds_under_2_5'].replace(0, np.nan).fillna(2.0)
+        
+        df.loc[:, 'implied_prob_over'] = 1.0 / odds_over
+        df.loc[:, 'implied_prob_under'] = 1.0 / odds_under
     
-    # Fill NaN values with defaults
+    # Fill NaN values with defaults and replace infinity
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     df.loc[:, numeric_cols] = df[numeric_cols].fillna(0)
+    df.loc[:, numeric_cols] = df[numeric_cols].replace([np.inf, -np.inf], 0)
     
     return df
 
@@ -198,9 +203,10 @@ def engineer_btts_features(match_df: pd.DataFrame) -> pd.DataFrame:
         df['away_scoring_rate_season'].fillna(0) - df['home_conceding_rate_season'].fillna(0)
     )
     
-    # Fill NaN values with defaults
+    # Fill NaN values with defaults and replace infinity
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     df.loc[:, numeric_cols] = df[numeric_cols].fillna(0)
+    df.loc[:, numeric_cols] = df[numeric_cols].replace([np.inf, -np.inf], 0)
     
     return df
 
@@ -238,10 +244,27 @@ def prepare_match_features_for_prediction(match_obj, historical_df: Optional[pd.
         features_over_under = engineer_over_under_2_5_features(combined_df)
         features_btts = engineer_btts_features(combined_df)
         
-        # Extract the last row (our current match)
-        current_features_ou = features_over_under.iloc[[-1]]
-        current_features_btts = features_btts.iloc[[-1]]
+        # Run pipelines
+        features_over_under = engineer_over_under_2_5_features(combined_df)
+        features_btts = engineer_btts_features(combined_df)
         
+        # Extract the specific row for our current match
+        # We match on date, home_team, and away_team to be sure
+        mask = (
+            (features_over_under['date'] == match_obj.start_time) & 
+            (features_over_under['home_team'] == match_obj.home_team) & 
+            (features_over_under['away_team'] == match_obj.away_team)
+        )
+        
+        current_features_ou = features_over_under[mask]
+        current_features_btts = features_btts[mask]
+        
+        if current_features_ou.empty:
+            logger.warning(f"Could not find current match in engineered features: {match_obj.home_team} vs {match_obj.away_team}")
+            # Fallback to last row if not found (shouldn't happen)
+            current_features_ou = features_over_under.iloc[[-1]]
+            current_features_btts = features_btts.iloc[[-1]]
+            
         return current_features_ou, current_features_btts
     else:
         # Fallback if no historical data (won't have rolling stats)

@@ -138,3 +138,29 @@ class EnsembleModel(BaseModel):
 
     def load(self, path: str) -> None:
         pass
+
+    def calculate_probability(self, expected_value: float, line: float, side: str = 'Over') -> float:
+        """
+        Calculate the probability of the outcome using Poisson distribution.
+        
+        Args:
+            expected_value: The predicted expected value (lambda)
+            line: The betting line (e.g., 2.5)
+            side: 'Over' or 'Under'
+            
+        Returns:
+            Probability of the outcome
+        """
+        from scipy.stats import poisson
+        
+        if side == 'Over':
+            # P(X > line) = 1 - P(X <= line)
+            # Since line is usually x.5, we use floor(line)
+            # e.g., P(X > 2.5) = 1 - P(X <= 2)
+            prob = 1 - poisson.cdf(int(line), expected_value)
+        else:
+            # P(X < line) = P(X <= line)
+            # e.g., P(X < 2.5) = P(X <= 2)
+            prob = poisson.cdf(int(line), expected_value)
+            
+        return prob

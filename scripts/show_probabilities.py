@@ -5,8 +5,10 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.database import SessionLocal
-from app.core.models import DailyPick, Match
+from sqlalchemy import text
+from app.infrastructure.db.session import SessionLocal
+from app.domain.models import Match, DailyPick
+import pandas as pd
 from sqlalchemy import select, desc
 
 async def show_probabilities():

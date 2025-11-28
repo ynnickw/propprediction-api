@@ -339,7 +339,8 @@ class PredictionService:
                     expected_value=pred.get('expected_value', 0.0),
                     bookmaker_prob=pred['bookmaker_prob'],
                     model_prob=pred['model_prob'],
-                    edge=pred['edge_percent']
+                    edge=pred['edge_percent'],
+                    prediction_type=pred['prediction_type']
                 )
                 logger.info(f"Created match pick: {pred['match'].home_team} vs {pred['match'].away_team} - {pred['prediction_type']} {pred['recommendation']} (Edge: {pred['edge_percent']:.2f}%)")
             except Exception as e:
@@ -354,7 +355,7 @@ class PredictionService:
         if matches:
             logger.info(f"Processed {len(matches)} matches, {len(predictions)} picks generated ({len(predictions)/len(matches)*100:.1f}% pick rate)")
 
-    async def _store_pick(self, player_id, match_id, prop_type, line, recommendation, expected_value, bookmaker_prob, model_prob, edge):
+    async def _store_pick(self, player_id, match_id, prop_type, line, recommendation, expected_value, bookmaker_prob, model_prob, edge, prediction_type='player_prop'):
         """Helper to store a pick if it doesn't exist."""
         stmt = select(DailyPick).where(
             DailyPick.player_id == player_id,
@@ -369,6 +370,7 @@ class PredictionService:
             pick = DailyPick(
                 player_id=player_id,
                 match_id=match_id,
+                prediction_type=prediction_type,
                 prop_type=prop_type,
                 line=line,
                 recommendation=recommendation,
