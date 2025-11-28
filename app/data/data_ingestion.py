@@ -122,7 +122,7 @@ async def fetch_prop_lines(session: AsyncSession):
                         Match.start_time <= event_commence_time + timedelta(hours=24)
                     )
                     result_match = await session.execute(stmt_match)
-                    match = result_match.scalar_one_or_none()
+                    match = result_match.scalars().first()
                     
                     if not match:
                         # Fallback: Try away team
@@ -132,7 +132,7 @@ async def fetch_prop_lines(session: AsyncSession):
                             Match.start_time <= event_commence_time + timedelta(hours=24)
                         )
                         result_match = await session.execute(stmt_match)
-                        match = result_match.scalar_one_or_none()
+                        match = result_match.scalars().first()
 
                     if not match:
                         # Create Match from The Odds API event
@@ -292,58 +292,60 @@ async def fetch_match_odds(session: AsyncSession):
                         Match.status == 'NS'  # Only upcoming matches
                     )
                     result = await session.execute(stmt)
-                    match = result.scalar_one_or_none()
+                    matches = result.scalars().all()
                     
-                    if not match:
+                    if not matches:
                         continue
                     
-                    # Parse odds from bookmakers
-                    odds_over_2_5 = None
-                    odds_under_2_5 = None
-                    odds_btts_yes = None
-                    odds_btts_no = None
+                    for match in matches:
                     
-                    for bookmaker in odds_data.get("bookmakers", []):
-                        for market in bookmaker.get("markets", []):
-                            market_key = market.get("key")
-                            
-                            if market_key == "totals":
-                                # Over/Under 2.5 goals
-                                for outcome in market.get("outcomes", []):
-                                    name = outcome.get("name", "").lower()
-                                    price = outcome.get("price")
-                                    
-                                    if "over" in name and "2.5" in name:
-                                        if odds_over_2_5 is None or price < odds_over_2_5:
-                                            odds_over_2_5 = price
-                                    elif "under" in name and "2.5" in name:
-                                        if odds_under_2_5 is None or price < odds_under_2_5:
-                                            odds_under_2_5 = price
-                            
-                            elif market_key == "btts":
-                                # Both Teams To Score
-                                for outcome in market.get("outcomes", []):
-                                    name = outcome.get("name", "").lower()
-                                    price = outcome.get("price")
-                                    
-                                    if "yes" in name:
-                                        if odds_btts_yes is None or price < odds_btts_yes:
-                                            odds_btts_yes = price
-                                    elif "no" in name:
-                                        if odds_btts_no is None or price < odds_btts_no:
-                                            odds_btts_no = price
-                    
-                    # Update match with odds
-                    if odds_over_2_5:
-                        match.odds_over_2_5 = odds_over_2_5
-                    if odds_under_2_5:
-                        match.odds_under_2_5 = odds_under_2_5
-                    if odds_btts_yes:
-                        match.odds_btts_yes = odds_btts_yes
-                    if odds_btts_no:
-                        match.odds_btts_no = odds_btts_no
-                    
-                    await session.commit()
+                        # Parse odds from bookmakers
+                        odds_over_2_5 = None
+                        odds_under_2_5 = None
+                        odds_btts_yes = None
+                        odds_btts_no = None
+                        
+                        for bookmaker in odds_data.get("bookmakers", []):
+                            for market in bookmaker.get("markets", []):
+                                market_key = market.get("key")
+                                
+                                if market_key == "totals":
+                                    # Over/Under 2.5 goals
+                                    for outcome in market.get("outcomes", []):
+                                        name = outcome.get("name", "").lower()
+                                        price = outcome.get("price")
+                                        
+                                        if "over" in name and "2.5" in name:
+                                            if odds_over_2_5 is None or price < odds_over_2_5:
+                                                odds_over_2_5 = price
+                                        elif "under" in name and "2.5" in name:
+                                            if odds_under_2_5 is None or price < odds_under_2_5:
+                                                odds_under_2_5 = price
+                                
+                                elif market_key == "btts":
+                                    # Both Teams To Score
+                                    for outcome in market.get("outcomes", []):
+                                        name = outcome.get("name", "").lower()
+                                        price = outcome.get("price")
+                                        
+                                        if "yes" in name:
+                                            if odds_btts_yes is None or price < odds_btts_yes:
+                                                odds_btts_yes = price
+                                        elif "no" in name:
+                                            if odds_btts_no is None or price < odds_btts_no:
+                                                odds_btts_no = price
+                        
+                        # Update match with odds
+                        if odds_over_2_5:
+                            match.odds_over_2_5 = odds_over_2_5
+                        if odds_under_2_5:
+                            match.odds_under_2_5 = odds_under_2_5
+                        if odds_btts_yes:
+                            match.odds_btts_yes = odds_btts_yes
+                        if odds_btts_no:
+                            match.odds_btts_no = odds_btts_no
+                        
+                        await session.commit()
                     
             except Exception as e:
                 logger.error(f"Failed to fetch match odds for {league_name}: {e}")

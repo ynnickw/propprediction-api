@@ -431,7 +431,7 @@ async def generate_match_predictions(session):
                 DailyPick.prediction_type == pred['prediction_type'],
                 DailyPick.recommendation == pred['recommendation']
             )
-            existing = (await session.execute(stmt)).scalar_one_or_none()
+            existing = (await session.execute(stmt)).scalars().first()
             
             if not existing:
                 pick = DailyPick(
