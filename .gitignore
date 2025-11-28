@@ -76,3 +76,5 @@ alembic/versions/*.py
 debug_*.py
 check_*.py
 run_*.py
+
+*.sql
