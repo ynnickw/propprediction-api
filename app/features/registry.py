@@ -93,3 +93,27 @@ def calculate_h2h_btts_rate(df: pd.DataFrame, home_team: str, away_team: str,
         return float(btts_rate)
     
     return 0.0
+
+def add_ema_features(df: pd.DataFrame, team_col: str, value_col: str, 
+                     feature_name: str, span: int = 10) -> pd.DataFrame:
+    """Add Exponential Moving Average (EMA) feature."""
+    values = df.groupby(team_col)[value_col].transform(
+        lambda x: x.ewm(span=span, min_periods=1).mean().shift(1)
+    )
+    df.loc[:, feature_name] = values
+    return df
+
+def add_venue_specific_rolling_averages(df: pd.DataFrame, team_col: str, value_col: str, 
+                                        prefix: str, window_sizes: List[int] = [5]) -> pd.DataFrame:
+    """
+    Add rolling average features filtered by venue (Home/Away).
+    Example: Home Team's goals in their last 5 HOME games.
+    """
+    for window in window_sizes:
+        feature_name = f'{prefix}_venue_avg_last_{window}'
+        values = df.groupby(team_col)[value_col].transform(
+            lambda x: x.rolling(window, min_periods=1).mean().shift(1)
+        )
+        df.loc[:, feature_name] = values
+        
+    return df

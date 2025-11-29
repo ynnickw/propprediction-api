@@ -5,11 +5,11 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import text
+from sqlalchemy import text, select, desc
+from sqlalchemy.orm import joinedload
 from app.infrastructure.db.session import SessionLocal
 from app.domain.models import Match, DailyPick
 import pandas as pd
-from sqlalchemy import select, desc
 
 async def show_probabilities():
     async with SessionLocal() as session:
@@ -17,6 +17,10 @@ async def show_probabilities():
         stmt = (
             select(DailyPick, Match)
             .join(Match, DailyPick.match_id == Match.id)
+            .options(
+                joinedload(Match.home_team_obj),
+                joinedload(Match.away_team_obj)
+            )
             .where(DailyPick.prediction_type.in_(['over_under_2.5', 'btts']))
             .order_by(desc(DailyPick.created_at))
             .limit(50)

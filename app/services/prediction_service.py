@@ -2,6 +2,8 @@ import structlog
 import pandas as pd
 import time
 from sqlalchemy import select, func, desc
+from datetime import datetime
+from sqlalchemy.orm import joinedload
 from app.domain.models import Match, Player, PropLine, DailyPick, HistoricalStat
 from app.ml.predictor import predict_props, predict_match_outcome
 from app.ml.utils import calculate_edge
@@ -76,7 +78,10 @@ class PredictionService:
         logger.info("Generating player prop predictions")
         
         # Fetch upcoming matches and props
-        stmt = select(PropLine, Match, Player).join(Match).join(Player).where(Match.status == 'NS')
+        stmt = select(PropLine, Match, Player).join(Match).join(Player).options(
+            joinedload(Match.home_team_obj),
+            joinedload(Match.away_team_obj)
+        ).where(Match.status == 'NS')
         result = await self.session.execute(stmt)
         rows = result.all()
         
@@ -178,6 +183,7 @@ class PredictionService:
         
         await self.session.commit()
 
+
     async def generate_match_predictions(self):
         """
         Generate match-level predictions (Over/Under 2.5 and BTTS) for upcoming matches.
@@ -186,7 +192,10 @@ class PredictionService:
         logger.info("Generating match-level predictions")
         
         # Fetch upcoming matches with odds
-        stmt = select(Match).where(
+        stmt = select(Match).options(
+            joinedload(Match.home_team_obj),
+            joinedload(Match.away_team_obj)
+        ).where(
             Match.status == 'NS'  # Not started
         )
         result = await self.session.execute(stmt)
@@ -356,17 +365,31 @@ class PredictionService:
             logger.info(f"Processed {len(matches)} matches, {len(predictions)} picks generated ({len(predictions)/len(matches)*100:.1f}% pick rate)")
 
     async def _store_pick(self, player_id, match_id, prop_type, line, recommendation, expected_value, bookmaker_prob, model_prob, edge, prediction_type='player_prop'):
-        """Helper to store a pick if it doesn't exist."""
+        """Helper to store a pick. Updates existing pick if found, otherwise creates new."""
+        # Check for existing pick for this specific market (player/match/prop/line)
+        # We don't include recommendation in the check because we want to overwrite 
+        # if the recommendation changes (e.g. from Over to Under)
         stmt = select(DailyPick).where(
             DailyPick.player_id == player_id,
             DailyPick.match_id == match_id,
             DailyPick.prop_type == prop_type,
-            DailyPick.line == line,
-            DailyPick.recommendation == recommendation
+            DailyPick.line == line
         )
         existing_pick = (await self.session.execute(stmt)).scalar_one_or_none()
         
-        if not existing_pick:
+        if existing_pick:
+            # Update existing pick
+            existing_pick.recommendation = recommendation
+            existing_pick.model_expected = expected_value
+            existing_pick.bookmaker_prob = bookmaker_prob
+            existing_pick.model_prob = model_prob
+            existing_pick.edge_percent = edge
+            existing_pick.confidence = "High" if edge > 15 else "Medium"
+            existing_pick.prediction_type = prediction_type
+            existing_pick.created_at = datetime.utcnow()
+            # No need to add to session, it's already attached
+        else:
+            # Create new pick
             pick = DailyPick(
                 player_id=player_id,
                 match_id=match_id,
@@ -378,6 +401,7 @@ class PredictionService:
                 bookmaker_prob=bookmaker_prob,
                 model_prob=model_prob,
                 edge_percent=edge,
-                confidence="High" if edge > 15 else "Medium"
+                confidence="High" if edge > 15 else "Medium",
+                created_at=datetime.utcnow()
             )
             self.session.add(pick)

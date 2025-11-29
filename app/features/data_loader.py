@@ -24,33 +24,35 @@ def load_match_level_data(years: List[int] = None) -> pd.DataFrame:
     
     query = """
     SELECT 
-        start_time as "date",
-        home_team,
-        away_team,
-        home_score,
-        away_score,
-        home_half_time_goals,
-        away_half_time_goals,
-        home_shots,
-        away_shots,
-        home_shots_on_target,
-        away_shots_on_target,
-        home_corners,
-        away_corners,
-        home_fouls,
-        away_fouls,
-        home_yellow_cards,
-        away_yellow_cards,
-        home_red_cards,
-        away_red_cards,
-        odds_home,
-        odds_draw,
-        odds_away,
-        odds_over_2_5,
-        odds_under_2_5,
-        odds_btts_yes,
-        odds_btts_no
-    FROM matches
+        m.start_time as "date",
+        ht.name as home_team,
+        at.name as away_team,
+        m.home_score,
+        m.away_score,
+        m.home_half_time_goals,
+        m.away_half_time_goals,
+        m.home_shots,
+        m.away_shots,
+        m.home_shots_on_target,
+        m.away_shots_on_target,
+        m.home_corners,
+        m.away_corners,
+        m.home_fouls,
+        m.away_fouls,
+        m.home_yellow_cards,
+        m.away_yellow_cards,
+        m.home_red_cards,
+        m.away_red_cards,
+        m.odds_home,
+        m.odds_draw,
+        m.odds_away,
+        m.odds_over_2_5,
+        m.odds_under_2_5,
+        m.odds_btts_yes,
+        m.odds_btts_no
+    FROM matches m
+    JOIN teams ht ON m.home_team_id = ht.id
+    JOIN teams at ON m.away_team_id = at.id
     """
     
     logger.info("Loading match data from database")

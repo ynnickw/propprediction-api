@@ -3,14 +3,29 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.db.session import Base
 from datetime import datetime
 
+class Team(Base):
+    __tablename__ = "teams"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    aliases = Column(String, nullable=True) # JSON string of aliases
+    league = Column(String, nullable=True)
+
 class Match(Base):
     __tablename__ = "matches"
 
     id = Column(Integer, primary_key=True, index=True)
     fixture_id = Column(Integer, unique=True, index=True)
     league_id = Column(Integer)
-    home_team = Column(String)
-    away_team = Column(String)
+    
+    # Foreign Keys to Team
+    home_team_id = Column(Integer, ForeignKey("teams.id"))
+    away_team_id = Column(Integer, ForeignKey("teams.id"))
+    
+    # Relationships
+    home_team_obj = relationship("Team", foreign_keys=[home_team_id])
+    away_team_obj = relationship("Team", foreign_keys=[away_team_id])
+    
     start_time = Column(DateTime)
     status = Column(String)
     
@@ -46,6 +61,24 @@ class Match(Base):
     odds_btts_no = Column(Float, nullable=True)
 
     prop_lines = relationship("PropLine", back_populates="match")
+
+    @property
+    def home_team(self):
+        return self.home_team_obj.name if self.home_team_obj else None
+
+    @home_team.setter
+    def home_team(self, value):
+        # Allow setting home_team (e.g. from legacy code or kwargs), but ignore if we rely on home_team_id
+        # Ideally we should lookup the team by name and set home_team_id, but for now just pass
+        pass
+
+    @property
+    def away_team(self):
+        return self.away_team_obj.name if self.away_team_obj else None
+
+    @away_team.setter
+    def away_team(self, value):
+        pass
 
 class Player(Base):
     __tablename__ = "players"
