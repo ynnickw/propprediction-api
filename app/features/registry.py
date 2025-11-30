@@ -117,3 +117,33 @@ def add_venue_specific_rolling_averages(df: pd.DataFrame, team_col: str, value_c
         df.loc[:, feature_name] = values
         
     return df
+
+def calculate_rest_days(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate rest days for home and away teams.
+    Requires 'date', 'home_team', 'away_team' columns.
+    """
+    # Create a long format schedule
+    home_schedule = df[['date', 'home_team']].rename(columns={'home_team': 'team'})
+    away_schedule = df[['date', 'away_team']].rename(columns={'away_team': 'team'})
+    schedule = pd.concat([home_schedule, away_schedule]).sort_values(['team', 'date'])
+    
+    # Calculate days since previous match
+    schedule.loc[:, 'prev_date'] = schedule.groupby('team')['date'].shift(1)
+    schedule.loc[:, 'rest_days'] = (schedule['date'] - schedule['prev_date']).dt.days
+    
+    # Fill NaN (first game) with a default large number (e.g., 7)
+    schedule.loc[:, 'rest_days'] = schedule['rest_days'].fillna(7)
+    
+    # Prepare for merge
+    schedule_home = schedule.rename(columns={'team': 'home_team', 'rest_days': 'home_rest_days'})[['date', 'home_team', 'home_rest_days']]
+    schedule_away = schedule.rename(columns={'team': 'away_team', 'rest_days': 'away_rest_days'})[['date', 'away_team', 'away_rest_days']]
+    
+    # Remove duplicates just in case
+    schedule_home = schedule_home.drop_duplicates(['date', 'home_team'])
+    schedule_away = schedule_away.drop_duplicates(['date', 'away_team'])
+    
+    df = pd.merge(df, schedule_home, on=['date', 'home_team'], how='left')
+    df = pd.merge(df, schedule_away, on=['date', 'away_team'], how='left')
+    
+    return df

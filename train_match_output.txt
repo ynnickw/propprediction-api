@@ -1,0 +1,232 @@
+2025-11-29 17:29:24 [info     ] ============================================================
+2025-11-29 17:29:24 [info     ] Training Over/Under 2.5 Goals Model
+2025-11-29 17:29:24 [info     ] ============================================================
+2025-11-29 17:29:25 [info     ] Loading match data from database
+2025-11-29 17:29:25 [info     ] Loaded 5886 match records from database
+2025-11-29 17:29:25 [info     ] Engineering Over/Under 2.5 features
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:130: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['home_points'] = np.select(conditions, choices_home, default=np.nan)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:131: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['away_points'] = np.select(conditions, choices_away, default=np.nan)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:138: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['date'] = pd.to_datetime(df['date'])
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:132: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['prev_date'] = schedule.groupby('team')['date'].shift(1)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:133: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['rest_days'] = (schedule['date'] - schedule['prev_date']).dt.days
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:136: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['rest_days'] = schedule['rest_days'].fillna(7)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:152: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['home_ppg_last_5'] = df['home_form_avg_last_5']
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:154: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['away_ppg_last_5'] = df['away_form_avg_last_5']
+2025-11-29 17:29:32 [info     ] Prepared 5886 samples with 41 features
+2025-11-29 17:29:32 [info     ] Training Over/Under 2.5 goals model
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[20]	valid_0's binary_logloss: 0.655391
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[29]	valid_0's binary_logloss: 0.648238
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[33]	valid_0's binary_logloss: 0.634877
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[30]	valid_0's binary_logloss: 0.63267
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[12]	valid_0's binary_logloss: 0.695969
+2025-11-29 17:29:35 [info     ] Saved LightGBM model to models/lgbm_over_under_2.5.txt
+2025-11-29 17:29:35 [info     ] Saved Poisson model to models/poisson_over_under_2.5.joblib
+2025-11-29 17:29:35 [info     ] LightGBM accuracy: 0.620 ± 0.060
+2025-11-29 17:29:35 [info     ] Poisson accuracy: 0.506 ± 0.092
+2025-11-29 17:29:35 [info     ] Training completed successfully
+2025-11-29 17:29:35 [info     ] ============================================================
+2025-11-29 17:29:35 [info     ] Training Both Teams To Score (BTTS) Model
+2025-11-29 17:29:35 [info     ] ============================================================
+2025-11-29 17:29:35 [info     ] Loading match data from database
+2025-11-29 17:29:35 [info     ] Loaded 5886 match records from database
+2025-11-29 17:29:35 [info     ] Engineering BTTS features
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:265: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['home_points'] = np.select(conditions, choices_home, default=np.nan)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:266: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['away_points'] = np.select(conditions, choices_away, default=np.nan)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:272: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['date'] = pd.to_datetime(df['date'])
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:132: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['prev_date'] = schedule.groupby('team')['date'].shift(1)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:133: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['rest_days'] = (schedule['date'] - schedule['prev_date']).dt.days
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/registry.py:136: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  schedule['rest_days'] = schedule['rest_days'].fillna(7)
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:284: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['home_ppg_last_5'] = df['home_form_avg_last_5']
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:286: FutureWarning: ChainedAssignmentError: behaviour will change in pandas 3.0!
+You are setting values through chained assignment. Currently this works in certain cases, but when using Copy-on-Write (which will become the default behaviour in pandas 3.0) this will never work to update the original DataFrame or Series, because the intermediate object on which we are setting values will behave as a copy.
+A typical example is when you are setting values in a column of a DataFrame, like:
+
+df["col"][row_indexer] = value
+
+Use `df.loc[row_indexer, "col"] = values` instead, to perform the assignment in a single step and ensure this keeps updating the original `df`.
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+  df['away_ppg_last_5'] = df['away_form_avg_last_5']
+2025-11-29 17:29:43 [info     ] Prepared 5886 samples with 39 features for BTTS
+2025-11-29 17:29:43 [info     ] Training BTTS model
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[2]	valid_0's binary_logloss: 0.69131
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[24]	valid_0's binary_logloss: 0.678489
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[23]	valid_0's binary_logloss: 0.669905
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[38]	valid_0's binary_logloss: 0.650048
+Training until validation scores don't improve for 50 rounds
+Early stopping, best iteration is:
+[24]	valid_0's binary_logloss: 0.677642
+2025-11-29 17:29:45 [info     ] Training Poisson models for BTTS...
+2025-11-29 17:29:45 [info     ] Saved Poisson home/away goal models
+2025-11-29 17:29:45 [info     ] Saved LightGBM BTTS model to models/lgbm_btts.txt
+2025-11-29 17:29:45 [info     ] BTTS LightGBM accuracy: 0.555 ± 0.037
+2025-11-29 17:29:45 [info     ] BTTS training completed successfully

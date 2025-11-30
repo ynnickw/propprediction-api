@@ -74,8 +74,8 @@ def train_over_under_2_5_model(df: pd.DataFrame, features: List[str],
             lgb_params,
             train_data,
             valid_sets=[val_data],
-            num_boost_round=100,
-            callbacks=[lgb.early_stopping(10), lgb.log_evaluation(0)]
+            num_boost_round=2000,
+            callbacks=[lgb.early_stopping(50), lgb.log_evaluation(100)]
         )
         
         y_pred = model.predict(X_val)
@@ -209,8 +209,8 @@ def train_btts_model(df: pd.DataFrame, features: List[str],
             lgb_params,
             train_data,
             valid_sets=[val_data],
-            num_boost_round=100,
-            callbacks=[lgb.early_stopping(10), lgb.log_evaluation(0)]
+            num_boost_round=2000,
+            callbacks=[lgb.early_stopping(50), lgb.log_evaluation(100)]
         )
         
         y_pred = model.predict(X_val)

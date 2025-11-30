@@ -47,28 +47,28 @@ def analyze_models():
         print("Model file not found.")
 
     # 3. Analyze BTTS
-    print("\n--- BTTS Analysis ---")
-    df_btts = engineer_btts_features(match_df)
+    # print("\n--- BTTS Analysis ---")
+    # df_btts = engineer_btts_features(match_df)
     
-    if 'btts' in df_btts.columns:
-        counts = df_btts['btts'].value_counts(normalize=True)
-        print(f"Class Balance (BTTS):")
-        print(counts)
-        baseline = counts.max()
-        print(f"Baseline Accuracy (Majority Class): {baseline:.4f}")
+    # if 'btts' in df_btts.columns:
+    #     counts = df_btts['btts'].value_counts(normalize=True)
+    #     print(f"Class Balance (BTTS):")
+    #     print(counts)
+    #     baseline = counts.max()
+    #     print(f"Baseline Accuracy (Majority Class): {baseline:.4f}")
 
-    # Load Model
-    model_path = os.path.join(MODEL_DIR, "lgbm_btts.txt")
-    if os.path.exists(model_path):
-        model = lgb.Booster(model_file=model_path)
-        print("\nFeature Importance (Top 10):")
-        importance = pd.DataFrame({
-            'feature': model.feature_name(),
-            'importance': model.feature_importance()
-        }).sort_values('importance', ascending=False).head(10)
-        print(importance.to_string(index=False))
-    else:
-        print("Model file not found.")
+    # # Load Model
+    # model_path = os.path.join(MODEL_DIR, "lgbm_btts.txt")
+    # if os.path.exists(model_path):
+    #     model = lgb.Booster(model_file=model_path)
+    #     print("\nFeature Importance (Top 10):")
+    #     importance = pd.DataFrame({
+    #         'feature': model.feature_name(),
+    #         'importance': model.feature_importance()
+    #     }).sort_values('importance', ascending=False).head(10)
+    #     print(importance.to_string(index=False))
+    # else:
+    #     print("Model file not found.")
 
 if __name__ == "__main__":
     analyze_models()

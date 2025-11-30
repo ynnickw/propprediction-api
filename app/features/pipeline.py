@@ -9,7 +9,8 @@ from .registry import (
     calculate_h2h_total_goals_avg,
     calculate_h2h_btts_rate,
     add_ema_features,
-    add_venue_specific_rolling_averages
+    add_venue_specific_rolling_averages,
+    calculate_rest_days
 )
 
 logger = structlog.get_logger()
@@ -116,6 +117,15 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     df = add_venue_specific_rolling_averages(df, 'home_team', 'away_score', 'home_conceded_home', [5])
     df = add_venue_specific_rolling_averages(df, 'away_team', 'home_score', 'away_conceded_away', [5])
     
+    # 2.5 Shot Statistics (Rolling Averages)
+    if 'home_shots' in df.columns and 'away_shots' in df.columns:
+        df = add_rolling_averages(df, 'home_team', 'home_shots', 'home_shots', [5])
+        df = add_rolling_averages(df, 'away_team', 'away_shots', 'away_shots', [5])
+        
+    if 'home_shots_on_target' in df.columns and 'away_shots_on_target' in df.columns:
+        df = add_rolling_averages(df, 'home_team', 'home_shots_on_target', 'home_shots_on_target', [5])
+        df = add_rolling_averages(df, 'away_team', 'away_shots_on_target', 'away_shots_on_target', [5])
+    
     # 3. Recent Form (Points)
     # Calculate points for home and away teams
     conditions = [
@@ -126,24 +136,31 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     choices_home = [3, 0, 1]
     choices_away = [0, 3, 1]
     
-    df['home_points'] = np.select(conditions, choices_home, default=np.nan)
-    df['away_points'] = np.select(conditions, choices_away, default=np.nan)
+    df.loc[:, 'home_points'] = np.select(conditions, choices_home, default=np.nan)
+    df.loc[:, 'away_points'] = np.select(conditions, choices_away, default=np.nan)
     
     # Rolling average points (Form)
     df = add_rolling_averages(df, 'home_team', 'home_points', 'home_form', [5])
     df = add_rolling_averages(df, 'away_team', 'away_points', 'away_form', [5])
     
     # 4. Rest Days
-    df['date'] = pd.to_datetime(df['date'])
-    for team_type in ['home', 'away']:
-        team_col = f'{team_type}_team'
-        # Calculate days since last match for the team
-        # We need to consider both home and away games for the team history
-        # This is tricky in the current wide format.
-        # Simplified approach: Group by team_col (only accounts for consecutive home or consecutive away games)
-        # Better approach: We need a long format to calculate this properly.
-        # For now, let's skip complex rest days calculation or implement a simple version
-        pass
+    df.loc[:, 'date'] = pd.to_datetime(df['date'])
+    df = calculate_rest_days(df)
+    
+    # 5. Interaction Features (Attack vs Defense)
+    # Home Attack vs Away Defense
+    if 'home_goals_avg_last_5' in df.columns and 'away_conceded_avg_last_5' in df.columns:
+        df['home_att_vs_away_def'] = df['home_goals_avg_last_5'] * df['away_conceded_avg_last_5']
+        
+    # Away Attack vs Home Defense
+    if 'away_goals_avg_last_5' in df.columns and 'home_conceded_avg_last_5' in df.columns:
+        df['away_att_vs_home_def'] = df['away_goals_avg_last_5'] * df['home_conceded_avg_last_5']
+        
+    # 6. Points Per Game (PPG)
+    if 'home_form_avg_last_5' in df.columns:
+        df.loc[:, 'home_ppg_last_5'] = df['home_form_avg_last_5']
+    if 'away_form_avg_last_5' in df.columns:
+        df.loc[:, 'away_ppg_last_5'] = df['away_form_avg_last_5']
     
     # Head-to-head history
     h2h_values = df.apply(
@@ -170,10 +187,11 @@ def engineer_over_under_2_5_features(match_df: pd.DataFrame) -> pd.DataFrame:
     if 'odds_over_2_5' in df.columns:
         # Replace 0 with NaN to avoid division by zero
         odds_over = df['odds_over_2_5'].replace(0, np.nan).fillna(2.0)
-        odds_under = df['odds_under_2_5'].replace(0, np.nan).fillna(2.0)
+        df.loc[:, 'implied_prob_over_2_5'] = 1 / odds_over
         
-        df.loc[:, 'implied_prob_over'] = 1.0 / odds_over
-        df.loc[:, 'implied_prob_under'] = 1.0 / odds_under
+    if 'odds_under_2_5' in df.columns:
+        odds_under = df['odds_under_2_5'].replace(0, np.nan).fillna(2.0)
+        df.loc[:, 'implied_prob_under_2_5'] = 1 / odds_under
     
     # Fill NaN values with defaults and replace infinity
     numeric_cols = df.select_dtypes(include=[np.number]).columns
@@ -245,6 +263,15 @@ def engineer_btts_features(match_df: pd.DataFrame) -> pd.DataFrame:
     df = add_venue_specific_rolling_averages(df, 'home_team', 'away_score', 'home_conceded_home', [5])
     df = add_venue_specific_rolling_averages(df, 'away_team', 'home_score', 'away_conceded_away', [5])
     
+    # 2.5 Shot Statistics (Rolling Averages)
+    if 'home_shots' in df.columns and 'away_shots' in df.columns:
+        df = add_rolling_averages(df, 'home_team', 'home_shots', 'home_shots', [5])
+        df = add_rolling_averages(df, 'away_team', 'away_shots', 'away_shots', [5])
+        
+    if 'home_shots_on_target' in df.columns and 'away_shots_on_target' in df.columns:
+        df = add_rolling_averages(df, 'home_team', 'home_shots_on_target', 'home_shots_on_target', [5])
+        df = add_rolling_averages(df, 'away_team', 'away_shots_on_target', 'away_shots_on_target', [5])
+    
     # 3. Recent Form (Points)
     conditions = [
         (df['home_score'] > df['away_score']),
@@ -254,15 +281,28 @@ def engineer_btts_features(match_df: pd.DataFrame) -> pd.DataFrame:
     choices_home = [3, 0, 1]
     choices_away = [0, 3, 1]
     
-    df['home_points'] = np.select(conditions, choices_home, default=np.nan)
-    df['away_points'] = np.select(conditions, choices_away, default=np.nan)
+    df.loc[:, 'home_points'] = np.select(conditions, choices_home, default=np.nan)
+    df.loc[:, 'away_points'] = np.select(conditions, choices_away, default=np.nan)
     
     df = add_rolling_averages(df, 'home_team', 'home_points', 'home_form', [5])
     df = add_rolling_averages(df, 'away_team', 'away_points', 'away_form', [5])
     
-    # 4. Rest Days (Placeholder)
-    df['date'] = pd.to_datetime(df['date'])
-    pass
+    # 4. Rest Days
+    df.loc[:, 'date'] = pd.to_datetime(df['date'])
+    df = calculate_rest_days(df)
+    
+    # 5. Interaction Features
+    if 'home_goals_avg_last_5' in df.columns and 'away_conceded_avg_last_5' in df.columns:
+        df['home_att_vs_away_def'] = df['home_goals_avg_last_5'] * df['away_conceded_avg_last_5']
+        
+    if 'away_goals_avg_last_5' in df.columns and 'home_conceded_avg_last_5' in df.columns:
+        df['away_att_vs_home_def'] = df['away_goals_avg_last_5'] * df['home_conceded_avg_last_5']
+        
+    # 6. Points Per Game (PPG)
+    if 'home_form_avg_last_5' in df.columns:
+        df.loc[:, 'home_ppg_last_5'] = df['home_form_avg_last_5']
+    if 'away_form_avg_last_5' in df.columns:
+        df.loc[:, 'away_ppg_last_5'] = df['away_form_avg_last_5']
     
     # Head-to-head BTTS history
     h2h_btts_values = df.apply(
@@ -270,6 +310,17 @@ def engineer_btts_features(match_df: pd.DataFrame) -> pd.DataFrame:
         axis=1
     )
     df.loc[:, 'h2h_btts_rate'] = h2h_btts_values
+    
+    # Bookmaker odds features
+    if 'odds_btts_yes' in df.columns:
+        df.loc[:, 'odds_btts_yes'] = df['odds_btts_yes'].fillna(0)
+    if 'odds_btts_no' in df.columns:
+        df.loc[:, 'odds_btts_no'] = df['odds_btts_no'].fillna(0)
+        
+    if 'odds_over_2_5' in df.columns:
+        # Replace 0 with NaN to avoid division by zero
+        odds_over = df['odds_over_2_5'].replace(0, np.nan).fillna(2.0)
+        df.loc[:, 'implied_prob_over_2_5'] = 1 / odds_over
     
     # Interaction features
     df.loc[:, 'combined_scoring_probability'] = (
@@ -314,17 +365,21 @@ def prepare_match_features_for_prediction(match_obj, historical_df: Optional[pd.
     current_match_df = pd.DataFrame([match_data])
     
     if historical_df is not None and not historical_df.empty:
-        # Append current match to historical data to calculate rolling stats
-        # Ensure columns match
-        common_cols = list(set(historical_df.columns) & set(current_match_df.columns))
+        # Drop rest_days columns from historical data to avoid duplicates when recalculating
+        cols_to_drop = [col for col in historical_df.columns if 'rest_days' in col]
+        if cols_to_drop:
+            historical_df = historical_df.drop(columns=cols_to_drop)
         
+        # Ensure current_match_df has all columns from historical_df (filled with NaN)
+        # This is crucial so that rolling average functions can find the columns (e.g. home_shots)
+        # even if they are NaN for the current match
+        for col in historical_df.columns:
+            if col not in current_match_df.columns:
+                current_match_df[col] = np.nan
+                
         # We need to append current match to the end
         combined_df = pd.concat([historical_df, current_match_df], ignore_index=True)
         combined_df = combined_df.sort_values('date')
-        
-        # Run pipelines
-        features_over_under = engineer_over_under_2_5_features(combined_df)
-        features_btts = engineer_btts_features(combined_df)
         
         # Run pipelines
         features_over_under = engineer_over_under_2_5_features(combined_df)

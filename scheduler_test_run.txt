@@ -1,0 +1,652 @@
+<frozen runpy>:128: RuntimeWarning: 'app.services.scheduler' found in sys.modules after import of package 'app.services', but prior to execution of 'app.services.scheduler'; this may result in unpredictable behaviour
+2025-11-29 21:13:59 [info     ] Starting pipeline job
+2025-11-29 21:13:59 [info     ] Fetching upcoming matches
+2025-11-29 21:14:00 [info     ] Fetched 306 fixtures for Bundesliga
+2025-11-29 21:14:00 [info     ] Fetching match odds (Over/Under 2.5 and BTTS)
+2025-11-29 21:14:00 [info     ] Fetched 12 events for Bundesliga (soccer_germany_bundesliga)
+2025-11-29 21:14:00 [debug    ] Odds API Event: Hamburger SV vs VfB Stuttgart -> Hamburger SV vs VfB Stuttgart
+2025-11-29 21:14:00 [info     ] Found 1 matches for Hamburger SV vs VfB Stuttgart
+2025-11-29 21:14:01 [info     ] Updated Over 2.5 odds for Hamburger SV vs VfB Stuttgart: 1.5
+2025-11-29 21:14:01 [info     ] Updated BTTS Yes odds for Hamburger SV vs VfB Stuttgart: 1.42
+2025-11-29 21:14:01 [debug    ] Odds API Event: Eintracht Frankfurt vs VfL Wolfsburg -> Eintracht Frankfurt vs VfL Wolfsburg
+2025-11-29 21:14:01 [info     ] Found 1 matches for Eintracht Frankfurt vs VfL Wolfsburg
+2025-11-29 21:14:01 [info     ] Updated Over 2.5 odds for Eintracht Frankfurt vs VfL Wolfsburg: 1.44
+2025-11-29 21:14:01 [info     ] Updated BTTS Yes odds for Eintracht Frankfurt vs VfL Wolfsburg: 1.44
+2025-11-29 21:14:01 [debug    ] Odds API Event: SC Freiburg vs FSV Mainz 05 -> SC Freiburg vs FSV Mainz 05
+2025-11-29 21:14:01 [info     ] Found 1 matches for SC Freiburg vs FSV Mainz 05
+2025-11-29 21:14:02 [warning  ] No Over 2.5 odds found for SC Freiburg vs FSV Mainz 05
+2025-11-29 21:14:02 [debug    ] Odds API Event: FSV Mainz 05 vs Borussia Monchengladbach -> FSV Mainz 05 vs Borussia Mönchengladbach
+2025-11-29 21:14:02 [info     ] Found 1 matches for FSV Mainz 05 vs Borussia Mönchengladbach
+2025-11-29 21:14:02 [warning  ] No Over 2.5 odds found for FSV Mainz 05 vs Borussia Mönchengladbach
+2025-11-29 21:14:02 [debug    ] Odds API Event: 1. FC Heidenheim vs SC Freiburg -> 1. FC Heidenheim vs SC Freiburg
+2025-11-29 21:14:02 [info     ] Found 1 matches for 1. FC Heidenheim vs SC Freiburg
+2025-11-29 21:14:02 [warning  ] No Over 2.5 odds found for 1. FC Heidenheim vs SC Freiburg
+2025-11-29 21:14:02 [debug    ] Odds API Event: 1. FC Köln vs FC St. Pauli -> 1. FC Köln vs FC St. Pauli
+2025-11-29 21:14:02 [info     ] Found 1 matches for 1. FC Köln vs FC St. Pauli
+2025-11-29 21:14:03 [warning  ] No Over 2.5 odds found for 1. FC Köln vs FC St. Pauli
+2025-11-29 21:14:03 [debug    ] Odds API Event: Augsburg vs Bayer Leverkusen -> FC Augsburg vs Bayer Leverkusen
+2025-11-29 21:14:03 [info     ] Found 1 matches for FC Augsburg vs Bayer Leverkusen
+2025-11-29 21:14:03 [warning  ] No Over 2.5 odds found for FC Augsburg vs Bayer Leverkusen
+2025-11-29 21:14:03 [debug    ] Odds API Event: VfB Stuttgart vs Bayern Munich -> VfB Stuttgart vs Bayern München
+2025-11-29 21:14:03 [info     ] Found 1 matches for VfB Stuttgart vs Bayern München
+2025-11-29 21:14:03 [warning  ] No Over 2.5 odds found for VfB Stuttgart vs Bayern München
+2025-11-29 21:14:03 [debug    ] Odds API Event: VfL Wolfsburg vs Union Berlin -> VfL Wolfsburg vs Union Berlin
+2025-11-29 21:14:03 [info     ] Found 1 matches for VfL Wolfsburg vs Union Berlin
+2025-11-29 21:14:04 [warning  ] No Over 2.5 odds found for VfL Wolfsburg vs Union Berlin
+2025-11-29 21:14:04 [debug    ] Odds API Event: RB Leipzig vs Eintracht Frankfurt -> RB Leipzig vs Eintracht Frankfurt
+2025-11-29 21:14:04 [info     ] Found 1 matches for RB Leipzig vs Eintracht Frankfurt
+2025-11-29 21:14:04 [warning  ] No Over 2.5 odds found for RB Leipzig vs Eintracht Frankfurt
+2025-11-29 21:14:04 [debug    ] Odds API Event: Hamburger SV vs Werder Bremen -> Hamburger SV vs Werder Bremen
+2025-11-29 21:14:04 [info     ] Found 1 matches for Hamburger SV vs Werder Bremen
+2025-11-29 21:14:04 [warning  ] No Over 2.5 odds found for Hamburger SV vs Werder Bremen
+2025-11-29 21:14:04 [debug    ] Odds API Event: Borussia Dortmund vs TSG Hoffenheim -> Borussia Dortmund vs TSG Hoffenheim
+2025-11-29 21:14:04 [warning  ] No match found for Borussia Dortmund vs TSG Hoffenheim
+2025-11-29 21:14:04 [info     ] Generating player prop predictions
+2025-11-29 21:14:04 [info     ] Found 0 prop lines to process
+2025-11-29 21:14:04 [info     ] Generating match-level predictions
+2025-11-29 21:14:04 [info     ] Found 206 upcoming matches
+2025-11-29 21:14:04 [info     ] Loading match data from database
+2025-11-29 21:14:04 [info     ] Loaded 5886 match records from database
+2025-11-29 21:14:04 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:14:13 [info     ] Engineering BTTS features
+2025-11-29 21:14:20 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:14:28 [info     ] Engineering BTTS features
+2025-11-29 21:14:36 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:14:44 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:14:52 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:14:52 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:14:52 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:14:52 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:14:52 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:14:59 [info     ] Engineering BTTS features
+2025-11-29 21:15:07 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:15:15 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:23 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:23 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:23 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:23 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+/Users/yannick.westermann/Desktop/Coden/proprediction/app/features/pipeline.py:348: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  combined_df = pd.concat([historical_df[common_cols], current_match_df[common_cols]], ignore_index=True)
+2025-11-29 21:15:23 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:15:30 [info     ] Engineering BTTS features
+2025-11-29 21:15:38 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:15:46 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:54 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:15:54 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:15:54 [debug    ] Skipping match 1899 Hoffenheim vs FC Augsburg: No odds available
+2025-11-29 21:15:54 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:16:02 [info     ] Engineering BTTS features
+2025-11-29 21:16:09 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:16:17 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:25 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:25 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:25 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:25 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:16:25 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:16:33 [info     ] Engineering BTTS features
+2025-11-29 21:16:41 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:16:48 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:56 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:56 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:56 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:16:56 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:16:56 [debug    ] Skipping match Borussia Dortmund vs 1899 Hoffenheim: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Union Berlin vs RB Leipzig: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Borussia Mönchengladbach vs VfL Wolfsburg: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match 1899 Hoffenheim vs Hamburger SV: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Eintracht Frankfurt vs FC Augsburg: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match FC St. Pauli vs 1. FC Heidenheim: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Bayer Leverkusen vs 1. FC Köln: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match SC Freiburg vs Borussia Dortmund: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Bayern München vs FSV Mainz 05: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Werder Bremen vs VfB Stuttgart: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match Borussia Dortmund vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:16:56 [debug    ] Skipping match VfL Wolfsburg vs SC Freiburg: No odds available
+2025-11-29 21:16:56 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:17:05 [info     ] Engineering BTTS features
+2025-11-29 21:17:12 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:17:20 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:17:28 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:17:28 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:17:28 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:17:28 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:17:28 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:17:36 [info     ] Engineering BTTS features
+2025-11-29 21:17:44 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:17:52 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:00 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:00 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:00 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:00 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:18:00 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:18:08 [info     ] Engineering BTTS features
+2025-11-29 21:18:16 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:18:23 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:31 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:31 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:31 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:18:31 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:18:31 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:18:38 [info     ] Engineering BTTS features
+2025-11-29 21:18:46 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:18:54 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:01 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:01 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:01 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:01 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:19:01 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:19:09 [info     ] Engineering BTTS features
+2025-11-29 21:19:17 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:19:24 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:32 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:32 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:32 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:19:32 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfL Wolfsburg vs Bayern München: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FSV Mainz 05 vs Union Berlin: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Dortmund vs Eintracht Frankfurt: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1899 Hoffenheim vs Werder Bremen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC Augsburg vs Borussia Mönchengladbach: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match VfB Stuttgart vs Bayer Leverkusen: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match RB Leipzig vs FC St. Pauli: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Hamburger SV vs SC Freiburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Köln vs 1. FC Heidenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayern München vs 1. FC Köln: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match SC Freiburg vs RB Leipzig: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Werder Bremen vs Borussia Dortmund: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Borussia Mönchengladbach vs 1899 Hoffenheim: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Bayer Leverkusen vs Hamburger SV: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Eintracht Frankfurt vs VfB Stuttgart: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match 1. FC Heidenheim vs FSV Mainz 05: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match Union Berlin vs FC Augsburg: No odds available
+2025-11-29 21:19:32 [debug    ] Skipping match FC St. Pauli vs VfL Wolfsburg: No odds available
+2025-11-29 21:19:32 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:19:40 [info     ] Engineering BTTS features
+2025-11-29 21:19:48 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:19:56 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:04 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:04 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:04 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:04 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:20:04 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:20:12 [info     ] Engineering BTTS features
+2025-11-29 21:20:21 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:20:30 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:38 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:38 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:38 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:20:38 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:20:38 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:20:47 [info     ] Engineering BTTS features
+2025-11-29 21:20:55 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:21:03 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:11 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:11 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:11 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:11 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:21:11 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:21:18 [info     ] Engineering BTTS features
+2025-11-29 21:21:26 [info     ] Engineering Over/Under 2.5 features
+2025-11-29 21:21:34 [info     ] Engineering BTTS features
+[LightGBM] [Fatal] The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:42 [warning  ] LightGBM prediction failed: The number of features in data (35) is not the same as it was in training data (41).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:42 [warning  ] Poisson prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_shots_avg_last_5
+- away_shots_on_target_avg_last_5
+- home_shots_avg_last_5
+- home_shots_on_target_avg_last_5
+- odds_btts_no
+- ...
+
+[LightGBM] [Fatal] The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:42 [warning  ] LightGBM prediction failed: The number of features in data (21) is not the same as it was in training data (39).
+You can set ``predict_disable_shape_check=true`` to discard this error, but please be aware what you are doing.
+2025-11-29 21:21:42 [warning  ] Poisson BTTS prediction failed: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- away_conceded_away_venue_avg_last_5
+- away_conceded_ema_10
+- away_form_avg_last_5
+- away_goals_away_venue_avg_last_5
+- away_goals_ema_10
+- ...
+
+2025-11-29 21:21:42 [info     ] Engineering Over/Under 2.5 features
